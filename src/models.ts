@@ -1,4 +1,5 @@
 import uuidv4 from 'uuid/v4';
+import { registry as jobRegistry } from './jobs';
 
 export abstract class Engine<Args> {
   public abstract readonly name: string;
@@ -16,6 +17,7 @@ export abstract class Job<Result> {
 
   protected constructor() {
     this.uuid = uuidv4();
+    jobRegistry.register(this);
   }
 
   public getUUID(): string {

@@ -11,8 +11,8 @@ interface DistanceJobResult {
 }
 
 interface DistanceArgs {
-  source: Address;
-  sink: Address;
+  source: string;
+  sink: string;
 }
 
 class DistanceJob extends Job<DistanceJobResult> {
@@ -102,7 +102,7 @@ export class DistanceEngine extends Engine<DistanceArgs> {
   readonly name: string = 'DistanceEngine';
 
   execute(args: DistanceArgs): string {
-    const job = new DistanceJob(args.source, args.sink);
+    const job = new DistanceJob(new Address(args.source), new Address(args.sink));
 
     log(`Starting job for distance from ${args.source} to ${args.sink}`);
 

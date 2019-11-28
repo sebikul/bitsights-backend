@@ -17,7 +17,7 @@ app.get('/health', async (_, res) => {
   res.status(200).send('OK');
 });
 
-app.put('/jobs', async (req, res) => {
+app.post('/jobs', async (req, res) => {
   const jobType = req.body.job_type;
   const args = req.body.args;
 
@@ -40,7 +40,7 @@ app.put('/jobs', async (req, res) => {
 
 });
 
-app.put('/jobs/:id', async (req, res) => {
+app.get('/jobs/:id', async (req, res) => {
   const jobUUID = req.params.id;
 
   const job = jobRegistry.getJob(jobUUID);

@@ -11,7 +11,7 @@ interface RelatedJobResult {
 }
 
 interface RelatedArgs {
-  needle_address: Address;
+  needle_address: string;
 }
 
 class RelatedJob extends Job<RelatedJobResult> {
@@ -28,6 +28,7 @@ class RelatedJob extends Job<RelatedJobResult> {
   }
 
   public async execute(): Promise<void> {
+    this.addresses.push(this.source);
     return this.findRelatedTo(this.source).then(() => {
       this.setResult({
         addresses: this.addresses,
@@ -130,7 +131,7 @@ export class RelatedAddressEngine extends Engine<RelatedArgs> {
   readonly name: string = 'RelatedAddressEngine';
 
   execute(args: RelatedArgs): string {
-    const job = new RelatedJob(args.needle_address);
+    const job = new RelatedJob(new Address(args.needle_address));
 
     log(`Starting job for related addresses to ${args.needle_address}`);
 

@@ -1,15 +1,15 @@
 import config from 'dos-config';
 import yargs from 'yargs';
-import app from './app';
-import { DistanceEngine } from "./engines/distance";
+
+import { DistanceEngine } from './engines/distance';
 import { RelatedAddressEngine } from './engines/related';
-import { Address } from './models';
 
 config.env = process.env.NODE_ENV || config.env;
 
 const log = require('debug')('bitsights:index');
 
 function startDaemon() {
+  const app = require('./app').default;
 
   const server = app.listen(config.port, () => {
     log(`Express server listening on port: ${config.port}`);
@@ -27,22 +27,19 @@ function startDaemon() {
 }
 
 function findRelated(source: string) {
-  const address = new Address(source);
   const engine = new RelatedAddressEngine();
 
-  const jobUUID = engine.execute({ needle_address: address });
+  const jobUUID = engine.execute({ needle_address: source });
 
-  log(`Finding addresses related to ${address.address}. Job ${jobUUID}`);
+  log(`Finding addresses related to ${source}. Job ${jobUUID}`);
 }
 
 function findDistance(source: string, sink: string) {
-  const sourceAddress = new Address(source);
-  const sinkAddress = new Address(sink);
   const engine = new DistanceEngine();
 
   const jobUUID = engine.execute({
-    sink: sinkAddress,
-    source: sourceAddress,
+    sink,
+    source,
   });
 
   log(`Finding distance from ${source} to ${sink}. Job ${jobUUID}`);

@@ -15,6 +15,14 @@ class JobRegistry {
     return this.jobs[uuid];
   }
 
+  public register(job: Job<any>) {
+    if (this.jobs.hasOwnProperty(job.getUUID())) {
+      throw new Error('Job is already registered');
+    }
+
+    this.jobs[job.getUUID()] = job;
+  }
+
 }
 
 export const registry = new JobRegistry();
