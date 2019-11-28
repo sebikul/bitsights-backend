@@ -1,0 +1,9 @@
+{
+  "env": "development",
+  "port": 3000,
+  "bcoin": {
+    "host": "bitsights.sebikul.com",
+    "apiKey": "",
+    "port": 443
+  }
+}
