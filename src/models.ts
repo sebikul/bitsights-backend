@@ -12,20 +12,26 @@ export abstract class Engine<Args> {
 export abstract class Job<Result> {
 
   private readonly uuid: string;
+  private readonly type: string;
   private result: Result | undefined;
   private status: 'running' | 'finished' = 'running';
 
-  protected constructor() {
+  protected constructor(type: string) {
     this.uuid = uuidv4();
+    this.type = type;
     jobRegistry.register(this);
   }
 
-  public getUUID(): string {
+  public getUUID() {
     return this.uuid;
   }
 
   public getStatus() {
     return this.status;
+  }
+
+  public getType() {
+    return this.type;
   }
 
   public getResult(): Result | undefined {

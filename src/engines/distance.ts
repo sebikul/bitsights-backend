@@ -22,8 +22,8 @@ class DistanceJob extends Job<DistanceJobResult> {
 
   private pathsQueue: Edge[][] = [];
 
-  constructor(source: Address, sink: Address) {
-    super();
+  constructor(type: string, source: Address, sink: Address) {
+    super(type);
 
     this.source = source;
     this.sink = sink;
@@ -99,10 +99,10 @@ class DistanceJob extends Job<DistanceJobResult> {
 }
 
 export class DistanceEngine extends Engine<DistanceArgs> {
-  readonly name: string = 'DistanceEngine';
+  readonly name: string = 'DISTANCE';
 
   execute(args: DistanceArgs): string {
-    const job = new DistanceJob(new Address(args.source), new Address(args.sink));
+    const job = new DistanceJob(this.name, new Address(args.source), new Address(args.sink));
 
     log(`Starting job for distance from ${args.source} to ${args.sink}`);
 

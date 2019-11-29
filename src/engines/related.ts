@@ -21,8 +21,8 @@ class RelatedJob extends Job<RelatedJobResult> {
   private addresses: Address[] = [];
   private edges: Edge[] = [];
 
-  constructor(source: Address) {
-    super();
+  constructor(type: string, source: Address) {
+    super(type);
 
     this.source = source;
   }
@@ -128,10 +128,10 @@ class RelatedJob extends Job<RelatedJobResult> {
 }
 
 export class RelatedAddressEngine extends Engine<RelatedArgs> {
-  readonly name: string = 'RelatedAddressEngine';
+  readonly name: string = 'RELATED';
 
   execute(args: RelatedArgs): string {
-    const job = new RelatedJob(new Address(args.needle_address));
+    const job = new RelatedJob(this.name,  new Address(args.needle_address));
 
     log(`Starting job for related addresses to ${args.needle_address}`);
 

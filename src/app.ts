@@ -24,7 +24,7 @@ app.post('/jobs', async (req, res) => {
   const engine = engineRegistry.getEngine(jobType);
 
   if (engine === null) {
-    res.status(404).send({ message: 'Engine not found', status: 'error' });
+    res.status(404).send({ message: `Engine not found: ${jobType}`, status: 'error' });
     return;
   }
 
@@ -49,17 +49,33 @@ app.get('/jobs/:id', async (req, res) => {
     return;
   }
 
+  res.status(200).send({
+    status: job.getStatus(),
+    type: job.getType(),
+    uuid: job.getUUID(),
+  });
+});
+
+app.get('/jobs/:id/results', async (req, res) => {
+  const jobUUID = req.params.id;
+
+  const job = jobRegistry.getJob(jobUUID);
+  if (job === null) {
+    res.status(404).send({ message: 'Job not found', status: 'error' });
+    return;
+  }
+
   if (job.getStatus() === 'running') {
     res.status(200).send({ message: 'Job is still processing', status: 'running' });
     return;
   }
 
   res.status(200).send({
-    message: 'Job has finished processing',
     results: job.getResult(),
-    status: 'finished',
+    status: job.getStatus(),
+    type: job.getType(),
+    uuid: job.getUUID(),
   });
-
 });
 
 export default app;
