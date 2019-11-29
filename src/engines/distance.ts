@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { getTransactionsForAddress } from '../bcoin';
-import { Address, Edge, Engine, Job, Transaction } from '../models';
+import { Address, Edge, Engine, Job, JobCallback, Transaction } from '../models';
 import { registry as engineRegistry } from './index';
 
 const log = require('debug')('bitsights:engine:distance');
@@ -98,16 +98,20 @@ class DistanceJob extends Job<DistanceJobResult> {
   }
 }
 
-export class DistanceEngine extends Engine<DistanceArgs> {
+export class DistanceEngine extends Engine<DistanceArgs, DistanceJobResult> {
   readonly name: string = 'DISTANCE';
 
-  execute(args: DistanceArgs): string {
+  execute(args: DistanceArgs, callback?: JobCallback<DistanceJobResult>): string {
     const job = new DistanceJob(this.name, new Address(args.source), new Address(args.sink));
 
     log(`Starting job for distance from ${args.source} to ${args.sink}`);
 
     job.execute().then(() => {
       log(`Job ${job.getUUID()} finished.`);
+
+      if (callback !== undefined) {
+        callback(job.getResult());
+      }
     }).catch((reason) => {
       log(`Job ${job.getUUID()} failed with reason: ${reason}`);
     });

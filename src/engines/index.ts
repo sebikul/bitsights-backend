@@ -1,13 +1,13 @@
 import { Engine } from '../models';
 
 interface EnginesMap {
-  [name: string]: Engine<any>;
+  [name: string]: Engine<unknown, unknown>;
 }
 
 class EngineRegistry {
   private readonly engines: EnginesMap = {};
 
-  public getEngine(name: string): Engine<any> | null {
+  public getEngine(name: string): Engine<unknown, unknown> | null {
     if (!this.engines.hasOwnProperty(name)) {
       return null;
     }
@@ -15,7 +15,7 @@ class EngineRegistry {
     return this.engines[name];
   }
 
-  public register(engine: Engine<any>) {
+  public register(engine: Engine<unknown, unknown>) {
     if (this.engines.hasOwnProperty(engine.name)) {
       throw new Error('Check is already registered');
     }

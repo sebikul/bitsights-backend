@@ -1,6 +1,6 @@
 import { flatten } from 'lodash';
 import { getTransactionsForAddress } from '../bcoin';
-import { Address, Edge, Engine, Job, Transaction } from '../models';
+import { Address, Edge, Engine, Job, JobCallback, Transaction } from '../models';
 import { registry as engineRegistry } from './index';
 
 const log = require('debug')('bitsights:engine:related');
@@ -127,16 +127,20 @@ class RelatedJob extends Job<RelatedJobResult> {
   }
 }
 
-export class RelatedAddressEngine extends Engine<RelatedArgs> {
+export class RelatedAddressEngine extends Engine<RelatedArgs, RelatedJobResult> {
   readonly name: string = 'RELATED';
 
-  execute(args: RelatedArgs): string {
-    const job = new RelatedJob(this.name,  new Address(args.needle_address));
+  execute(args: RelatedArgs, callback?: JobCallback<RelatedJobResult>): string {
+    const job = new RelatedJob(this.name, new Address(args.needle_address));
 
     log(`Starting job for related addresses to ${args.needle_address}`);
 
     job.execute().then(() => {
       log(`Job ${job.getUUID()} finished.`);
+
+      if (callback !== undefined) {
+        callback(job.getResult());
+      }
     }).catch((reason) => {
       log(`Job ${job.getUUID()} failed with reason: ${reason}`);
     });
@@ -149,7 +153,6 @@ export class RelatedAddressEngine extends Engine<RelatedArgs> {
       return { field: 'needle_address', message: 'missing field' };
     }
   }
-
 }
 
 engineRegistry.register(new RelatedAddressEngine());

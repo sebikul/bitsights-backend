@@ -18,10 +18,10 @@ app.get('/health', async (_, res) => {
 });
 
 app.post('/jobs', async (req, res) => {
-  const jobType = req.body.job_type;
+  const jobType: string = req.body.job_type;
   const args = req.body.args;
 
-  const engine = engineRegistry.getEngine(jobType);
+  const engine = engineRegistry.getEngine(jobType.toUpperCase());
 
   if (engine === null) {
     res.status(404).send({ message: `Engine not found: ${jobType}`, status: 'error' });

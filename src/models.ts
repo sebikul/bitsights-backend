@@ -1,12 +1,16 @@
 import uuidv4 from 'uuid/v4';
 import { registry as jobRegistry } from './jobs';
 
-export abstract class Engine<Args> {
+export interface JobCallback<Result> {
+  (result: Result | undefined): void;
+}
+
+export abstract class Engine<Args, Result> {
   public abstract readonly name: string;
 
   public abstract validateArgs(args: Args): object | undefined;
 
-  public abstract execute(args: Args): string ;
+  public abstract execute(args: Args, callback?: JobCallback<Result>): string ;
 }
 
 export abstract class Job<Result> {
@@ -80,7 +84,6 @@ export class Transaction {
     }
 
     return false;
-
   }
 }
 
