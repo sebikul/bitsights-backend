@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <title>Bitsights</title>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">Bitsights</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Help</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col col-sm ">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Welcome to Bitsights</h3>
+                </div>
+                <div class="card-body">
+
+                    <p class="lead text-justify">
+                        Lorem ipsum
+                    </p>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col col-sm ">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Related address search</h3>
+                </div>
+                <div class="card-body">
+
+                    <form>
+                        <div class="form-group">
+                            <label for="relatedSourceAddress">Source address</label>
+                            <input type="text" class="form-control" id="relatedSourceAddress">
+                        </div>
+
+                        <button class="btn btn-primary" id="related-address-search">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Start</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col col-sm ">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Distance address search</h3>
+                </div>
+                <div class="card-body">
+
+                    <form>
+                        <div class="form-group">
+                            <label for="distanceSourceAddress">Source address</label>
+                            <input type="text" class="form-control" id="distanceSourceAddress" value="mnPfojHV6zCbWNxdvui6TXwza6PMjbyBqc">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="distanceSinkAddress">Sink address</label>
+                            <input type="text" class="form-control" id="distanceSinkAddress" value="mnUkCH6ca558QNArLJCW5iwvTMpFbTD7NC">
+                        </div>
+
+                        <button class="btn btn-primary" id="distance-address-search">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Start
+                        </button>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col">
+
+        </div>
+    </div>
+
+</div>
+
+<div id="graph" style="text-align: center;"></div>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+<script src="/js/d3.js"></script>
+<script src="/js/viz.js" type="javascript/worker"></script>
+<script src="/js/d3-graphviz.js"></script>
+<script src="/main.js"></script>
+
+<script>
+    $(document).ready(function () {
+        margin = 20; // to avoid scrollbars
+        var svgWidth = window.innerWidth - margin;
+        var svgHeight = window.innerHeight - margin;
+        var leftPad = 20;
+        var rightPad = 20;
+        var topPad = 20;
+        var bottomPad = 20;
+        graphviz = d3.select("#graph").graphviz()
+            .zoomScaleExtent([0.01, 100])
+            .attributer(attributer)
+            .renderDot('digraph  {a -> b}');
+
+        function attributer(datum, index, nodes) {
+            var selection = d3.select(this);
+            if (datum.tag == "svg") {
+                graphWidth = +selection.datum().attributes.width.replace('pt', '');
+                graphHeight = +selection.datum().attributes.height.replace('pt', '');
+                graphviz.zoomTranslateExtent([[rightPad + graphWidth - svgWidth, bottomPad - svgHeight], [svgWidth - leftPad, svgHeight - topPad - graphHeight]])
+                selection
+                    .attr("width", svgWidth)
+                    .attr("height", svgHeight)
+                    .attr("viewBox", "0 0 " + svgWidth + " " + svgHeight);
+                datum.attributes.width = svgWidth;
+                datum.attributes.height = svgHeight;
+                datum.attributes.viewBox = " 0 0 " + svgWidth + " " + svgHeight;
+            }
+        }
+    })
+</script>
+
+</body>
+</html>

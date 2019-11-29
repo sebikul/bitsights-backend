@@ -18,7 +18,7 @@ export abstract class Job<Result> {
   private readonly uuid: string;
   private readonly type: string;
   private result: Result | undefined;
-  private status: 'running' | 'finished' = 'running';
+  private status: 'running' | 'finished' | 'failed' = 'running';
 
   protected constructor(type: string) {
     this.uuid = uuidv4();
@@ -43,6 +43,10 @@ export abstract class Job<Result> {
   }
 
   public abstract execute(): Promise<void>;
+
+  public setFailed() {
+    this.status = 'failed';
+  }
 
   protected setResult(result: Result) {
     this.result = result;

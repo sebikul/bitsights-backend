@@ -143,6 +143,7 @@ export class RelatedAddressEngine extends Engine<RelatedArgs, RelatedJobResult> 
       }
     }).catch((reason) => {
       log(`Job ${job.getUUID()} failed with reason: ${reason}`);
+      job.setFailed();
     });
 
     return job.getUUID();

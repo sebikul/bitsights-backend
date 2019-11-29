@@ -114,6 +114,7 @@ export class DistanceEngine extends Engine<DistanceArgs, DistanceJobResult> {
       }
     }).catch((reason) => {
       log(`Job ${job.getUUID()} failed with reason: ${reason}`);
+      job.setFailed();
     });
 
     return job.getUUID();

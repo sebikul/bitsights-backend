@@ -1,7 +1,14 @@
 {
-  "includes": ["src/**/*.ts"],
-  "extends": ["tslint-config-airbnb"],
-  "excludes": ["dist"],
+  "includes": [
+    "src/**/*.ts"
+  ],
+  "extends": [
+    "tslint-config-airbnb"
+  ],
+  "excludes": [
+    "dist",
+    "static"
+  ],
   "rules": {
     "arrow-return-shorthand": true,
     "import-name": false,
@@ -22,11 +29,22 @@
     "no-invalid-this": true,
     "no-trailing-whitespace": true,
     "no-unused-variable": false,
-    "object-literal-sort-keys": [true, "ignore-case"],
+    "object-literal-sort-keys": [
+      true,
+      "ignore-case"
+    ],
     "object-shorthand-properties-first": false,
-    "one-line": [true, "check-open-brace"],
+    "one-line": [
+      true,
+      "check-open-brace"
+    ],
     "ordered-imports": true,
-    "variable-name": [true, "ban-keywords", "check-format", "allow-pascal-case"],
+    "variable-name": [
+      true,
+      "ban-keywords",
+      "check-format",
+      "allow-pascal-case"
+    ],
     "whitespace": [
       true,
       "check-branch",
