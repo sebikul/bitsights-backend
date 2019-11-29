@@ -10,6 +10,12 @@ app.use(logger('dev'));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.set('view engine', 'pug');
+app.use(express.static('static'));
+
+app.get('/', (_, res) => {
+  res.render('index', { title: 'Hey', message: 'Hello there!' });
+});
 
 app.get('/ready', (_, res) => {
   res.status(200).send('OK');

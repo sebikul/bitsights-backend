@@ -27,19 +27,21 @@ function startDaemon() {
   });
 }
 
+function buildGraph(result: any) {
+  if (result === undefined) {
+    log('Unable to load result');
+    return;
+  }
+
+  const graph = buildGraphFromEdges(result.edges);
+  console.log(graph);
+  fs.writeFileSync('test_graph', graph);
+}
+
 function findRelated(source: string) {
   const engine = new RelatedAddressEngine();
 
-  const jobUUID = engine.execute({ needle_address: source }, (result) => {
-    if (result === undefined) {
-      log('Unable to load result');
-      return;
-    }
-
-    const graph = buildGraphFromEdges(result.edges);
-    console.log(graph);
-    fs.writeFileSync('test_graph', graph);
-  });
+  const jobUUID = engine.execute({ needle_address: source }, buildGraph);
 
   log(`Finding addresses related to ${source}. Job ${jobUUID}`);
 }
@@ -47,16 +49,7 @@ function findRelated(source: string) {
 function findDistance(source: string, sink: string) {
   const engine = new DistanceEngine();
 
-  const jobUUID = engine.execute({ sink, source }, (result) => {
-    if (result === undefined) {
-      log('Unable to load result');
-      return;
-    }
-
-    const graph = buildGraphFromEdges(result.edges);
-    console.log(graph);
-    fs.writeFileSync('test_graph', graph);
-  });
+  const jobUUID = engine.execute({ sink, source }, buildGraph);
 
   log(`Finding distance from ${source} to ${sink}. Job ${jobUUID}`);
 }
