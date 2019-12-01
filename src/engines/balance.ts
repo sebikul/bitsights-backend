@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { getBalance } from '../bcoin';
 import { Address, Engine, Job } from '../models';
 import { registry as engineRegistry } from './index';
@@ -34,7 +35,9 @@ class BalanceJob extends Job<BalanceJobResult> {
 
     let balance = 0;
 
-    for (const address of cluster.addresses) {
+    const chunks = _.chunk(cluster.addresses, 10);
+
+    for (const address of chunks) {
       const thisBalance = await getBalance(address);
 
       balance += thisBalance;

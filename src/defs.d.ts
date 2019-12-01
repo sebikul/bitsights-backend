@@ -8,6 +8,7 @@ declare module 'dos-config' {
       apiKey: string;
       port: number;
       host: string;
+      testnet: boolean;
     };
     redis: {
       enabled: boolean;

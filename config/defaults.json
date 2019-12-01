@@ -4,7 +4,8 @@
   "bcoin": {
     "host": "bitsights.sebikul.com",
     "apiKey": "",
-    "port": 443
+    "port": 443,
+    "testnet": true
   },
   "redis": {
     "enabled": false,

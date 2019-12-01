@@ -1,9 +1,10 @@
 const { NodeClient } = require('bclient');
 import config from 'dos-config';
+import _ from 'lodash';
 import redis from 'redis';
+import * as request from 'request-promise-native';
 import { promisify } from 'util';
 import { Address, Transaction } from './models';
-import * as request from 'request-promise-native';
 
 const log = require('debug')('bitsights:bcoin');
 
@@ -34,7 +35,7 @@ interface TransactionResponse {
 const clientOptions = {
   apiKey: config.bcoin.apiKey,
   host: config.bcoin.host,
-  network: 'testnet',
+  network: config.bcoin.testnet ? 'testnet' : 'main',
   port: config.bcoin.port,
   ssl: true,
 };
@@ -83,14 +84,16 @@ export async function getTransactionsForAddress(address: Address): Promise<Trans
   });
 }
 
-export async function getBalance(address: Address) {
+export async function getBalance(addresses: Address[]) {
+
+  const addressList = addresses.map(address => address.address).join('|');
 
   const options = {
     json: true,
-    uri: `https://testnet.blockchain.info/balance?active=${address.address}`,
+    uri: `https://${config.bcoin.testnet ? 'testnet.' : ''}blockchain.info/balance?active=${addressList}`,
   };
 
   const data = await request.get(options);
 
-  return data[address.address]['final_balance'];
+  return _.sumBy(Object.values(data), 'final_balance');
 }
