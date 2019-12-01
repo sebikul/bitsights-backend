@@ -3,6 +3,7 @@ import config from 'dos-config';
 import redis from 'redis';
 import { promisify } from 'util';
 import { Address, Transaction } from './models';
+import * as request from 'request-promise-native';
 
 const log = require('debug')('bitsights:bcoin');
 
@@ -80,4 +81,16 @@ export async function getTransactionsForAddress(address: Address): Promise<Trans
 
     return new Transaction(tx.hash, tx.time, inputs, outputs);
   });
+}
+
+export async function getBalance(address: Address) {
+
+  const options = {
+    json: true,
+    uri: `https://testnet.blockchain.info/balance?active=${address.address}`,
+  };
+
+  const data = await request.get(options);
+
+  return data[address.address]['final_balance'];
 }

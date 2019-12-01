@@ -3,7 +3,7 @@ import { Address, Edge, Engine, Job } from '../models';
 import { registry as engineRegistry } from './index';
 import { RelatedAddressEngine } from './related';
 
-const log = require('debug')('bitsights:engine:distance');
+const log = require('debug')('bitsights:engine:relationship');
 
 interface Cluster {
   addresses: Address[];

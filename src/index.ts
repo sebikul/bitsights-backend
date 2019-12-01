@@ -1,6 +1,7 @@
 import config from 'dos-config';
 import fs from 'fs';
 import yargs from 'yargs';
+import { BalanceEngine } from './engines/balance';
 import { DistanceEngine } from './engines/distance';
 import { RelatedAddressEngine } from './engines/related';
 import { RelationshipEngine } from './engines/relationship';
@@ -63,6 +64,14 @@ function findRelationship(left: string, right: string) {
   log(`Finding relationships from ${left} to ${right}. Job ${jobUUID}`);
 }
 
+function findBalance(source: string) {
+  const engine = new BalanceEngine();
+
+  const jobUUID = engine.execute({ needle_address: source }, buildGraph);
+
+  log(`Finding balance of cluster ${source}. Job ${jobUUID}`);
+}
+
 yargs
   .command(['start', '$0'], 'run the daemon', yargs => yargs, startDaemon)
   .command(
@@ -91,19 +100,31 @@ yargs
       },
     },
     args => findDistance(args.source, args.sink),
-  ).command(
-  'relationship <left> <right>',
-  'Find relationships between two clusters', {
-    left: {
-      default: '',
-      describe: 'Left address',
-      type: 'string',
+  )
+  .command(
+    'relationship <left> <right>',
+    'Find relationships between two clusters', {
+      left: {
+        default: '',
+        describe: 'Left address',
+        type: 'string',
+      },
+      right: {
+        default: '',
+        describe: 'Right address',
+        type: 'string',
+      },
     },
-    right: {
-      default: '',
-      describe: 'Right address',
-      type: 'string',
+    args => findRelationship(args.left, args.right),
+  )
+  .command(
+    'balance <source>',
+    'Find balance of cluster', {
+      source: {
+        default: '',
+        describe: 'Source address',
+        type: 'string',
+      },
     },
-  },
-  args => findRelationship(args.left, args.right),
-).argv;
+    args => findBalance(args.source),
+  ).argv;

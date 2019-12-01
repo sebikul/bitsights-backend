@@ -9,6 +9,10 @@ $(document).ready(function () {
     const relationshipAddressSearchButton = $("#relationship-address-search");
     relationshipAddressSearchButton.find('span').hide();
 
+
+    const relatedAddressBalanceButton = $("#related-address-balance-button");
+    relatedAddressBalanceButton.find('span').hide();
+
     function renderGraph(dotFile, callback) {
         const margin = 20; // to avoid scrollbars
         var svgWidth = window.innerWidth - margin;
@@ -40,11 +44,11 @@ $(document).ready(function () {
         // }
     }
 
-    function statusCallback(uuid, whenResultAvailable) {
+    function statusCallback(uuid, whenResultAvailable, button) {
         $.get(`/jobs/${uuid}`, function (data, status) {
             console.log(JSON.stringify(data));
             if (data.status === 'running') {
-                setTimeout(statusCallback, 1000, uuid, whenResultAvailable);
+                setTimeout(statusCallback, 1000, uuid, whenResultAvailable, button);
                 return
             }
 
@@ -53,54 +57,34 @@ $(document).ready(function () {
                 return;
             }
 
-            whenResultAvailable(uuid)
+            whenResultAvailable(uuid, button)
         })
     }
 
-    function relatedResultAvailable(uuid) {
+    function graphResultAvailable(uuid, button) {
 
-        relatedAddressSearchButton.attr("disabled", false);
-        relatedAddressSearchButton.find('span').hide();
+        button.attr("disabled", false);
+        button.find('span').hide();
 
-        $.get(`/jobs/${uuid}/results?format=graphviz`, function (data, status) {
-            console.log(data);
-
-            renderGraph(data);
-            $('#graph-modal').modal('show');
-        });
-
-    }
-
-    function distanceResultAvailable(uuid) {
-
-        distanceAddressSearchButton.attr("disabled", false);
-        distanceAddressSearchButton.find('span').hide();
-
-        $.get(`/jobs/${uuid}/results?format=graphviz`, function (data, status) {
+        $.get(`/jobs/${uuid}/results?format=graphviz`, function (data, _) {
             console.log(JSON.stringify(data));
 
             renderGraph(data);
             $('#graph-modal').modal('show');
-
         });
-
     }
 
-    function relationshipResultAvailable(uuid) {
+    function balanceResultAvailable(uuid, button) {
 
-        relationshipAddressSearchButton.attr("disabled", false);
-        relationshipAddressSearchButton.find('span').hide();
+        button.attr("disabled", false);
+        button.find('span').hide();
 
-        $.get(`/jobs/${uuid}/results?format=graphviz`, function (data, status) {
+        $.get(`/jobs/${uuid}/results`, function (data, _) {
             console.log(JSON.stringify(data));
 
-            renderGraph(data);
-            $('#graph-modal').modal('show');
-
+            $('#related-address-balance').text(`${data.results.balance / 100000000} BTC`);
         });
-
     }
-
 
     relatedAddressSearchButton.click(function (event) {
         event.stopImmediatePropagation();
@@ -127,13 +111,13 @@ $(document).ready(function () {
             contentType: 'application/json',
             data: JSON.stringify(data),
             processData: false,
-            success: function (data, textStatus, jQxhr) {
+            success: function (data, textStatus, _) {
                 if (data.status !== 'created') {
                     alert('Failed to create job.' + JSON.stringify(data.message))
 
                 }
                 const jobUUID = data.uuid;
-                statusCallback(jobUUID, relatedResultAvailable)
+                statusCallback(jobUUID, graphResultAvailable, relatedAddressSearchButton)
             },
             error: function (jqXhr, textStatus, errorThrown) {
                 console.log(errorThrown);
@@ -169,20 +153,19 @@ $(document).ready(function () {
             contentType: 'application/json',
             data: JSON.stringify(data),
             processData: false,
-            success: function (data, textStatus, jQxhr) {
+            success: function (data, textStatus, _) {
                 if (data.status !== 'created') {
                     alert('Failed to create job.' + JSON.stringify(data.message))
 
                 }
                 const jobUUID = data.uuid;
-                statusCallback(jobUUID, distanceResultAvailable)
+                statusCallback(jobUUID, graphResultAvailable, distanceAddressSearchButton)
             },
             error: function (jqXhr, textStatus, errorThrown) {
                 console.log(errorThrown);
             }
         });
-
-    })
+    });
 
     relationshipAddressSearchButton.click(function (event) {
         event.stopImmediatePropagation();
@@ -217,12 +200,53 @@ $(document).ready(function () {
 
                 }
                 const jobUUID = data.uuid;
-                statusCallback(jobUUID, relationshipResultAvailable)
+                statusCallback(jobUUID, graphResultAvailable, relationshipAddressSearchButton)
             },
             error: function (jqXhr, textStatus, errorThrown) {
                 console.log(errorThrown);
             }
         });
 
-    })
+    });
+
+    relatedAddressBalanceButton.click(function (event) {
+        event.stopImmediatePropagation();
+        event.stopPropagation();
+        event.preventDefault();
+
+        relatedAddressBalanceButton.attr("disabled", true);
+        relatedAddressBalanceButton.find('span').show();
+
+        const source = $('#relatedSourceAddress').val();
+        console.log(`Running related balance query for ${source}`);
+
+        const data = {
+            job_type: 'BALANCE',
+            args: {
+                needle_address: source,
+            }
+        };
+
+        $.ajax({
+            url: '/jobs',
+            dataType: 'json',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            processData: false,
+            success: function (data, textStatus, _) {
+                if (data.status !== 'created') {
+                    alert('Failed to create job.' + JSON.stringify(data.message))
+
+                }
+                const jobUUID = data.uuid;
+                statusCallback(jobUUID, balanceResultAvailable, relatedAddressBalanceButton)
+            },
+            error: function (jqXhr, textStatus, errorThrown) {
+                console.log(errorThrown);
+            }
+        })
+
+    });
+
 });
