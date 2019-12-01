@@ -5,5 +5,9 @@
     "host": "bitsights.sebikul.com",
     "apiKey": "",
     "port": 443
+  },
+  "redis": {
+    "enabled": false,
+    "host": "redis"
   }
 }

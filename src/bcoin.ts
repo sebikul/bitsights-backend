@@ -1,6 +1,15 @@
 const { NodeClient } = require('bclient');
 import config from 'dos-config';
+import redis from 'redis';
+import { promisify } from 'util';
 import { Address, Transaction } from './models';
+
+const log = require('debug')('bitsights:bcoin');
+
+const redisClient = redis.createClient();
+const getAsync = promisify(redisClient.get).bind(redisClient);
+
+// const setAsync = promisify(redisClient.set).bind(redisClient);
 
 interface CoinResponse {
   address: string;
@@ -31,11 +40,35 @@ const clientOptions = {
 
 const client = new NodeClient(clientOptions);
 
-export async function getTransactionsForAddress(address: Address): Promise<Transaction[]> {
-  const transactions: TransactionResponse[] = await client.getTXByAddress(address.address)
+async function performTransactionQuery(address: Address): Promise<TransactionResponse[]> {
+  return await client.getTXByAddress(address.address)
     .catch((reason: any) => {
       console.log(reason);
     });
+}
+
+export async function getTransactionsForAddress(address: Address): Promise<Transaction[]> {
+
+  log(`Querying blockchain for address ${address.address}`);
+
+  let transactions: TransactionResponse[];
+  let shouldWriteBack = false;
+
+  if (config.redis.enabled) {
+    const data = await getAsync(address.address);
+    if (data === null) {
+      shouldWriteBack = true;
+      transactions = await performTransactionQuery(address);
+    } else {
+      transactions = JSON.parse(data);
+    }
+  } else {
+    transactions = await performTransactionQuery(address);
+  }
+
+  if (config.redis.enabled && shouldWriteBack) {
+    redisClient.set(address.address, JSON.stringify(transactions));
+  }
 
   return transactions.map((tx) => {
     const inputs = tx.inputs

@@ -9,6 +9,10 @@ declare module 'dos-config' {
       port: number;
       host: string;
     };
+    redis: {
+      enabled: boolean;
+      host: string;
+    };
   }
 
   export default config;
