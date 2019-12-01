@@ -29,37 +29,61 @@ function startDaemon() {
   });
 }
 
-function buildGraph(result: any) {
+function getFilenameFromOutput(output: string, defaultName: string) {
+  return output.length > 0 ? output : defaultName;
+}
+
+function buildGraph(result: any, output: string) {
   if (result === undefined) {
     log('Unable to load result');
     return;
   }
 
   const graph = buildGraphFromEdges(result.edges);
-  console.log(graph);
-  fs.writeFileSync('test_graph', graph);
+  // console.log(graph);
+  fs.writeFileSync(output, graph);
 }
 
-function findRelated(source: string) {
+function findRelated(source: string, output: string) {
   const engine = new RelatedAddressEngine();
+  const filename = getFilenameFromOutput(
+    output,
+    `related_${source}.dot`,
+  );
 
-  const jobUUID = engine.execute({ needle_address: source }, buildGraph);
+  const jobUUID = engine.execute(
+    { needle_address: source },
+    (result: any) => buildGraph(result, filename),
+  );
 
   log(`Finding addresses related to ${source}. Job ${jobUUID}`);
 }
 
-function findDistance(source: string, sink: string) {
+function findDistance(source: string, sink: string, output: string) {
   const engine = new DistanceEngine();
-
-  const jobUUID = engine.execute({ sink, source }, buildGraph);
+  const filename = getFilenameFromOutput(
+    output,
+    `distance_${source}_to_${sink}.dot`,
+  );
+  const jobUUID = engine.execute(
+    { sink, source },
+    (result: any) => buildGraph(result, filename),
+  );
 
   log(`Finding distance from ${source} to ${sink}. Job ${jobUUID}`);
 }
 
-function findRelationship(left: string, right: string) {
+function findRelationship(left: string, right: string, output: string) {
   const engine = new RelationshipEngine();
+  const filename = getFilenameFromOutput(
+    output,
+    `relationship_${left}_${right}.dot`,
+  );
 
-  const jobUUID = engine.execute({ left, right }, buildGraph);
+  const jobUUID = engine.execute(
+    { left, right },
+    (result: any) => buildGraph(result, filename),
+  );
 
   log(`Finding relationships from ${left} to ${right}. Job ${jobUUID}`);
 }
@@ -67,27 +91,40 @@ function findRelationship(left: string, right: string) {
 function findBalance(source: string) {
   const engine = new BalanceEngine();
 
-  const jobUUID = engine.execute({ needle_address: source }, buildGraph);
+  const jobUUID = engine.execute(
+    { needle_address: source },
+    result => log(`The balance is ${result ? result.balance : 0} mBTC`),
+  );
 
   log(`Finding balance of cluster ${source}. Job ${jobUUID}`);
 }
 
 yargs
-  .command(['start', '$0'], 'run the daemon', yargs => yargs, startDaemon)
+  .command(['start'], 'run the daemon', yargs => yargs, startDaemon)
   .command(
-    'related <source>',
+    'related <source> [output]',
     'Find related addresses', {
+      output: {
+        default: '',
+        describe: 'Source address',
+        type: 'string',
+      },
       source: {
         default: '',
         describe: 'Source address',
         type: 'string',
       },
     },
-    args => findRelated(args.source),
+    args => findRelated(args.source, args.output),
   )
   .command(
-    'distance <source> <sink>',
+    'distance <source> <sink> [output]',
     'Find distance between addresses', {
+      output: {
+        default: '',
+        describe: 'Source address',
+        type: 'string',
+      },
       sink: {
         default: '',
         describe: 'Sink address',
@@ -99,14 +136,19 @@ yargs
         type: 'string',
       },
     },
-    args => findDistance(args.source, args.sink),
+    args => findDistance(args.source, args.sink, args.output),
   )
   .command(
-    'relationship <left> <right>',
+    'relationship <left> <right> [output]',
     'Find relationships between two clusters', {
       left: {
         default: '',
         describe: 'Left address',
+        type: 'string',
+      },
+      output: {
+        default: '',
+        describe: 'Source address',
         type: 'string',
       },
       right: {
@@ -115,7 +157,7 @@ yargs
         type: 'string',
       },
     },
-    args => findRelationship(args.left, args.right),
+    args => findRelationship(args.left, args.right, args.output),
   )
   .command(
     'balance <source>',
@@ -127,4 +169,5 @@ yargs
       },
     },
     args => findBalance(args.source),
-  ).argv;
+  )
+  .wrap(yargs.terminalWidth()).argv;
