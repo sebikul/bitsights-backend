@@ -2,7 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import logger from 'morgan';
 import { registry as engineRegistry } from './engines';
-import { buildGraphFromEdges } from './graph';
+import { buildBigraphFromEdges, buildGraphFromEdges } from './graph';
 import { registry as jobRegistry } from './jobs';
 
 const app = express();
@@ -96,11 +96,26 @@ app.get('/jobs/:id/results', async (req, res) => {
       break;
 
     case 'graphviz':
-      if (job.getType() === 'DISTANCE' || job.getType() === 'RELATED') {
-        const graph = buildGraphFromEdges(job.getResult().edges);
-        res.status(200).send(graph);
+
+      switch (job.getType()) {
+        case 'DISTANCE':
+        case 'RELATED':
+          const graph = buildGraphFromEdges(job.getResult().edges);
+          res.status(200).send(graph);
+          break;
+        case 'RELATIONSHIP':
+
+          const jobResult = job.getResult();
+
+          const bigraph = buildBigraphFromEdges(
+            jobResult.leftCluster.edges,
+            jobResult.rightCluster.edges,
+            jobResult.crossEdges,
+          );
+          res.status(200).send(bigraph);
+          break;
       }
-      break;
+
   }
 });
 

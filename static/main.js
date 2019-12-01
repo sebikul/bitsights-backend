@@ -19,7 +19,7 @@ $(document).ready(function () {
         var bottomPad = 20;
         const graphviz = d3.select("#graph").graphviz()
             .zoomScaleExtent([0.01, 100])
-            .zoom(false)
+            // .zoom(false)
             // .attributer(attributer)
             .renderDot(dotFile, callback);
         //
@@ -76,11 +76,26 @@ $(document).ready(function () {
         distanceAddressSearchButton.attr("disabled", false);
         distanceAddressSearchButton.find('span').hide();
 
-        $.get(`/jobs/${uuid}/results`, function (data, status) {
+        $.get(`/jobs/${uuid}/results?format=graphviz`, function (data, status) {
             console.log(JSON.stringify(data));
 
-            const dotFile = buildGraphFromEdges(data.results.edges);
-            renderGraph(dotFile, () => $('#graph-modal').modal('show'));
+            renderGraph(data);
+            $('#graph-modal').modal('show');
+
+        });
+
+    }
+
+    function relationshipResultAvailable(uuid) {
+
+        relationshipAddressSearchButton.attr("disabled", false);
+        relationshipAddressSearchButton.find('span').hide();
+
+        $.get(`/jobs/${uuid}/results?format=graphviz`, function (data, status) {
+            console.log(JSON.stringify(data));
+
+            renderGraph(data);
+            $('#graph-modal').modal('show');
 
         });
 
@@ -161,6 +176,48 @@ $(document).ready(function () {
                 }
                 const jobUUID = data.uuid;
                 statusCallback(jobUUID, distanceResultAvailable)
+            },
+            error: function (jqXhr, textStatus, errorThrown) {
+                console.log(errorThrown);
+            }
+        });
+
+    })
+
+    relationshipAddressSearchButton.click(function (event) {
+        event.stopImmediatePropagation();
+        event.stopPropagation();
+        event.preventDefault();
+
+        relationshipAddressSearchButton.attr("disabled", true);
+        relationshipAddressSearchButton.find('span').show();
+
+        const left = $('#relationshipLeftAddress').val();
+        const right = $('#relationshipRightAddress').val();
+        console.log(`Running relationships between ${left} to ${right}`);
+
+        const data = {
+            job_type: 'RELATIONSHIP',
+            args: {
+                left: left,
+                right: right,
+            }
+        };
+
+        $.ajax({
+            url: '/jobs',
+            dataType: 'json',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            processData: false,
+            success: function (data, textStatus, jQxhr) {
+                if (data.status !== 'created') {
+                    alert('Failed to create job.' + JSON.stringify(data.message))
+
+                }
+                const jobUUID = data.uuid;
+                statusCallback(jobUUID, relationshipResultAvailable)
             },
             error: function (jqXhr, textStatus, errorThrown) {
                 console.log(errorThrown);

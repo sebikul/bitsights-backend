@@ -48,7 +48,18 @@ class RelationshipJob extends Job<RelationshipJobResult> {
 
     const crossEdges: Edge[] = [];
 
-    for (const address of leftCluster.addresses) {
+    await this.findRelationships(rightCluster.addresses, leftCluster.addresses, crossEdges);
+    await this.findRelationships(leftCluster.addresses, rightCluster.addresses, crossEdges);
+
+    this.setResult({
+      crossEdges,
+      leftCluster,
+      rightCluster,
+    });
+  }
+
+  private async findRelationships(from: Address[], to: Address[], addTo: Edge[]) {
+    for (const address of from) {
       const transactions = await getTransactionsForAddress(address);
 
       for (const transaction of transactions) {
@@ -58,25 +69,20 @@ class RelationshipJob extends Job<RelationshipJobResult> {
 
         for (const output of transaction.outputs) {
 
-          const hasCrossEdge = rightCluster.addresses.find(
+          const hasCrossEdge = to.find(
             otherAddress => output.address === otherAddress.address,
           );
 
           if (hasCrossEdge) {
-            crossEdges.push(new Edge(address, output, transaction));
+            addTo.push(new Edge(address, output, transaction));
           }
 
         }
       }
 
     }
-
-    this.setResult({
-      crossEdges,
-      leftCluster,
-      rightCluster,
-    });
   }
+
 }
 
 export class RelationshipEngine extends Engine<RelationshipArgs, RelationshipJobResult> {

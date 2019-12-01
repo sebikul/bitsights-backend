@@ -15,20 +15,20 @@ export function buildBigraphFromEdges(leftEdges: Edge[], rightEdges: Edge[], cro
   const lines: string[] = ['digraph G {'];
 
   // Left Cluster
-  lines.push('subgraph left_cluster {');
-  lines.push('  color=blue');
+  lines.push('  subgraph cluster_left {');
+  lines.push('    color=blue');
   for (const edge of leftEdges) {
-    lines.push(renderEdge(edge));
+    lines.push(renderEdge(edge, '    '));
   }
-  lines.push('}');
+  lines.push('  }');
 
   // Left Cluster
-  lines.push('subgraph right_cluster {');
-  lines.push('  color=blue');
+  lines.push('  subgraph cluster_right {');
+  lines.push('    color=blue');
   for (const edge of rightEdges) {
-    lines.push(renderEdge(edge));
+    lines.push(renderEdge(edge, '    '));
   }
-  lines.push('}');
+  lines.push('  }');
 
   for (const edge of crossEdges) {
     lines.push(renderEdge(edge));

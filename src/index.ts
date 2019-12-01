@@ -3,6 +3,7 @@ import fs from 'fs';
 import yargs from 'yargs';
 import { DistanceEngine } from './engines/distance';
 import { RelatedAddressEngine } from './engines/related';
+import { RelationshipEngine } from './engines/relationship';
 import { buildGraphFromEdges } from './graph';
 
 config.env = process.env.NODE_ENV || config.env;
@@ -54,6 +55,14 @@ function findDistance(source: string, sink: string) {
   log(`Finding distance from ${source} to ${sink}. Job ${jobUUID}`);
 }
 
+function findRelationship(left: string, right: string) {
+  const engine = new RelationshipEngine();
+
+  const jobUUID = engine.execute({ left, right }, buildGraph);
+
+  log(`Finding relationships from ${left} to ${right}. Job ${jobUUID}`);
+}
+
 yargs
   .command(['start', '$0'], 'run the daemon', yargs => yargs, startDaemon)
   .command(
@@ -82,4 +91,19 @@ yargs
       },
     },
     args => findDistance(args.source, args.sink),
-  ).argv;
+  ).command(
+  'relationship <left> <right>',
+  'Find relationships between two clusters', {
+    left: {
+      default: '',
+      describe: 'Left address',
+      type: 'string',
+    },
+    right: {
+      default: '',
+      describe: 'Right address',
+      type: 'string',
+    },
+  },
+  args => findRelationship(args.left, args.right),
+).argv;
