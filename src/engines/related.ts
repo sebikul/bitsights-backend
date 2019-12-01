@@ -116,7 +116,7 @@ class RelatedJob extends Job<RelatedJobResult> {
       if (previousAddressTransactions.length === 0) {
         // This is the first time we see this address, it must be the change address
 
-        if (candidate !== undefined) {
+        if (candidate !== undefined || output.address === fromAddress.address) {
           // The two addresses are candidates. Let's ignore both.
           return [];
         }
@@ -130,9 +130,23 @@ class RelatedJob extends Job<RelatedJobResult> {
       return [];
     }
 
+    const wasPresentInCorpus = this.isPresentInCorpus(candidate);
+
     this.createEdge(fromAddress, candidate, fromTransaction, true);
 
-    return [candidate];
+    const relatedPromises: Promise<Address[]>[] = [];
+
+    if (!wasPresentInCorpus) {
+      const relatedToChangeAddress = this.findRelatedTo(candidate, fromTransaction);
+      relatedPromises.push(relatedToChangeAddress);
+    }
+
+    const resolved = await Promise.all(relatedPromises);
+    const resolvedFlattened = flatten(resolved);
+
+    resolvedFlattened.push(candidate);
+
+    return resolvedFlattened;
   }
 
   private createEdge(from: Address, to: Address, tx?: Transaction, isChange: boolean = false) {
