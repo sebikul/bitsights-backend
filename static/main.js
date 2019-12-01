@@ -6,7 +6,10 @@ $(document).ready(function () {
     const distanceAddressSearchButton = $("#distance-address-search");
     distanceAddressSearchButton.find('span').hide();
 
-    function renderGraph(dotFile) {
+    const relationshipAddressSearchButton = $("#relationship-address-search");
+    relationshipAddressSearchButton.find('span').hide();
+
+    function renderGraph(dotFile, callback) {
         const margin = 20; // to avoid scrollbars
         var svgWidth = window.innerWidth - margin;
         var svgHeight = window.innerHeight - margin;
@@ -16,35 +19,25 @@ $(document).ready(function () {
         var bottomPad = 20;
         const graphviz = d3.select("#graph").graphviz()
             .zoomScaleExtent([0.01, 100])
-            .attributer(attributer)
-            .renderDot(dotFile);
-
-        function attributer(datum, index, nodes) {
-            var selection = d3.select(this);
-            if (datum.tag === "svg") {
-                const graphWidth = +selection.datum().attributes.width.replace('pt', '');
-                const graphHeight = +selection.datum().attributes.height.replace('pt', '');
-                graphviz.zoomTranslateExtent([[rightPad + graphWidth - svgWidth, bottomPad - svgHeight], [svgWidth - leftPad, svgHeight - topPad - graphHeight]]);
-                selection
-                    .attr("width", svgWidth)
-                    .attr("height", svgHeight)
-                    .attr("viewBox", "0 0 " + svgWidth + " " + svgHeight);
-                datum.attributes.width = svgWidth;
-                datum.attributes.height = svgHeight;
-                datum.attributes.viewBox = " 0 0 " + svgWidth + " " + svgHeight;
-            }
-        }
-    }
-
-    function buildGraphFromEdges(edges) {
-        const lines = ['digraph G {'];
-
-        for (const edge of edges) {
-            lines.push(`  "${edge.source.address}" -> "${edge.target.address}" [ label = "${edge.transaction.hash}" ]`);
-        }
-
-        lines.push('}');
-        return lines.join('\n');
+            .zoom(false)
+            // .attributer(attributer)
+            .renderDot(dotFile, callback);
+        //
+        // function attributer(datum, index, nodes) {
+        //     var selection = d3.select(this);
+        //     if (datum.tag === "svg") {
+        //         const graphWidth = +selection.datum().attributes.width.replace('pt', '');
+        //         const graphHeight = +selection.datum().attributes.height.replace('pt', '');
+        //         graphviz.zoomTranslateExtent([[rightPad + graphWidth - svgWidth, bottomPad - svgHeight], [svgWidth - leftPad, svgHeight - topPad - graphHeight]]);
+        //         selection
+        //             .attr("width", svgWidth)
+        //             .attr("height", svgHeight)
+        //             .attr("viewBox", "0 0 " + svgWidth + " " + svgHeight);
+        //         datum.attributes.width = svgWidth;
+        //         datum.attributes.height = svgHeight;
+        //         datum.attributes.viewBox = " 0 0 " + svgWidth + " " + svgHeight;
+        //     }
+        // }
     }
 
     function statusCallback(uuid, whenResultAvailable) {
@@ -69,12 +62,13 @@ $(document).ready(function () {
         relatedAddressSearchButton.attr("disabled", false);
         relatedAddressSearchButton.find('span').hide();
 
-        $.get(`/jobs/${uuid}/results`, function (data, status) {
-            console.log(JSON.stringify(data));
+        $.get(`/jobs/${uuid}/results?format=graphviz`, function (data, status) {
+            console.log(data);
 
-            const dotFile = buildGraphFromEdges(data.results.edges);
-            renderGraph(dotFile);
-        })
+            renderGraph(data);
+            $('#graph-modal').modal('show');
+        });
+
     }
 
     function distanceResultAvailable(uuid) {
@@ -86,8 +80,10 @@ $(document).ready(function () {
             console.log(JSON.stringify(data));
 
             const dotFile = buildGraphFromEdges(data.results.edges);
-            renderGraph(dotFile);
-        })
+            renderGraph(dotFile, () => $('#graph-modal').modal('show'));
+
+        });
+
     }
 
 

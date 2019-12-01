@@ -1,6 +1,8 @@
 import uuidv4 from 'uuid/v4';
 import { registry as jobRegistry } from './jobs';
 
+const log = require('debug')('bitsights:models');
+
 export interface JobCallback<Result> {
   (result: Result | undefined): void;
 }
@@ -10,7 +12,33 @@ export abstract class Engine<Args, Result> {
 
   public abstract validateArgs(args: Args): object | undefined;
 
-  public abstract execute(args: Args, callback?: JobCallback<Result>): string ;
+  public execute(args: Args, callback?: JobCallback<Result>): string {
+    const job = this.buildJob(args);
+
+    log(`Starting job ${job.getType()}:${job.getUUID()}`);
+
+    job.execute().then(() => {
+      log(`Job ${job.getUUID()} finished.`);
+
+      if (callback !== undefined) {
+        callback(job.getResult());
+      }
+    }).catch((reason) => {
+      log(`Job ${job.getUUID()} failed with reason: ${reason}`);
+      job.setFailed();
+    });
+
+    return job.getUUID();
+  }
+
+  public executeForResults(args: Args): Promise<Result> {
+
+    return new Promise<Result>((resolve) => {
+      this.execute(args, resolve);
+    });
+  }
+
+  protected abstract buildJob(args: Args): Job<Result>;
 }
 
 export abstract class Job<Result> {
@@ -46,6 +74,27 @@ export abstract class Job<Result> {
 
   public setFailed() {
     this.status = 'failed';
+  }
+
+  public waitForResults(): Promise<Result> {
+
+    return new Promise<Result>((resolve, reject) => {
+      const checkForJobStatus = () => {
+        switch (this.getStatus()) {
+          case 'running':
+            setTimeout(checkForJobStatus, 100);
+            break;
+          case 'finished':
+            resolve(this.getResult());
+            break;
+          case 'failed':
+            reject();
+            break;
+        }
+      };
+
+      checkForJobStatus();
+    });
   }
 
   protected setResult(result: Result) {
@@ -95,10 +144,17 @@ export class Edge {
   public readonly source: Address;
   public readonly target: Address;
   public readonly transaction: Transaction;
+  public readonly isChange: boolean;
 
-  constructor(source: Address, target: Address, transaction: Transaction) {
+  constructor(
+    source: Address,
+    target: Address,
+    transaction: Transaction,
+    isChange: boolean = false,
+  ) {
     this.source = source;
     this.target = target;
     this.transaction = transaction;
+    this.isChange = isChange;
   }
 }

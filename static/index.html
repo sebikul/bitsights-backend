@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
+    <link rel="stylesheet" type="text/css" href="/css/style.css"/>
+
     <title>Bitsights</title>
 </head>
 <body>
@@ -32,38 +34,33 @@
     </div>
 </nav>
 <div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col col-sm ">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Welcome to Bitsights</h3>
-                </div>
-                <div class="card-body">
-
-                    <p class="lead text-justify">
-                        Lorem ipsum
-                    </p>
-                </div>
-            </div>
-        </div>
-
+    <div class="row justify-content-center margin-top">
 
         <div class="col col-sm ">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Related address search</h3>
+                    <h4 class="card-title">Related address search
+                        <button type="button" class="btn link" data-container="body" data-toggle="popover"
+                                data-placement="right"
+                                data-content="Find addresses related to this one by running a series of heuristics. More info in the help section.">
+                            <img src="/icons/question-fill.svg" width="24" height="24" title="Related address search"
+                                 alt="">
+                        </button>
+                    </h4>
                 </div>
                 <div class="card-body">
 
                     <form>
                         <div class="form-group">
                             <label for="relatedSourceAddress">Source address</label>
-                            <input type="text" class="form-control" id="relatedSourceAddress">
+                            <input type="text" class="form-control" id="relatedSourceAddress"
+                                   value="mnPfojHV6zCbWNxdvui6TXwza6PMjbyBqc">
                         </div>
 
                         <button class="btn btn-primary" id="related-address-search">
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            Start</button>
+                            Start
+                        </button>
                     </form>
                 </div>
             </div>
@@ -73,22 +70,67 @@
         <div class="col col-sm ">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Distance address search</h3>
+                    <h4 class="card-title">Distance address search
+                        <button type="button" class="btn link" data-container="body" data-toggle="popover"
+                                data-placement="right"
+                                data-content="Find the distance between two addresses. More info in the help section.">
+                            <img src="/icons/question-fill.svg" width="24" height="24" title="Distance address search"
+                                 alt="">
+                    </h4>
                 </div>
                 <div class="card-body">
 
                     <form>
                         <div class="form-group">
                             <label for="distanceSourceAddress">Source address</label>
-                            <input type="text" class="form-control" id="distanceSourceAddress" value="mnPfojHV6zCbWNxdvui6TXwza6PMjbyBqc">
+                            <input type="text" class="form-control" id="distanceSourceAddress"
+                                   value="mnPfojHV6zCbWNxdvui6TXwza6PMjbyBqc">
                         </div>
 
                         <div class="form-group">
                             <label for="distanceSinkAddress">Sink address</label>
-                            <input type="text" class="form-control" id="distanceSinkAddress" value="mnUkCH6ca558QNArLJCW5iwvTMpFbTD7NC">
+                            <input type="text" class="form-control" id="distanceSinkAddress"
+                                   value="mnUkCH6ca558QNArLJCW5iwvTMpFbTD7NC">
                         </div>
 
                         <button class="btn btn-primary" id="distance-address-search">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Start
+                        </button>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col col-sm ">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Cluster Relationships
+                        <button type="button" class="btn link" data-container="body" data-toggle="popover"
+                                data-placement="right"
+                                data-content="Find the relationship between two clusters of addresses. More info in the help section.">
+                            <img src="/icons/question-fill.svg" width="24" height="24" title="Distance address search"
+                                 alt="">
+                    </h4>
+                </div>
+                <div class="card-body">
+
+                    <form>
+                        <div class="form-group">
+                            <label for="relationshipRightAddress">Right address</label>
+                            <input type="text" class="form-control" id="relationshipRightAddress"
+                                   value="mnPfojHV6zCbWNxdvui6TXwza6PMjbyBqc">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="relationshipLeftAddress">Left address</label>
+                            <input type="text" class="form-control" id="relationshipLeftAddress"
+                                   value="mnUkCH6ca558QNArLJCW5iwvTMpFbTD7NC">
+                        </div>
+
+                        <button class="btn btn-primary" id="relationship-address-search">
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                             Start
                         </button>
@@ -106,9 +148,30 @@
         </div>
     </div>
 
+
+    <div class="modal fade bd-example-modal-xl" tabindex="-1" role="dialog" id="graph-modal">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Result</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="graph" style="text-align: center;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<div id="graph" style="text-align: center;"></div>
 
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -126,34 +189,8 @@
 <script src="/main.js"></script>
 
 <script>
-    $(document).ready(function () {
-        margin = 20; // to avoid scrollbars
-        var svgWidth = window.innerWidth - margin;
-        var svgHeight = window.innerHeight - margin;
-        var leftPad = 20;
-        var rightPad = 20;
-        var topPad = 20;
-        var bottomPad = 20;
-        graphviz = d3.select("#graph").graphviz()
-            .zoomScaleExtent([0.01, 100])
-            .attributer(attributer)
-            .renderDot('digraph  {a -> b}');
-
-        function attributer(datum, index, nodes) {
-            var selection = d3.select(this);
-            if (datum.tag == "svg") {
-                graphWidth = +selection.datum().attributes.width.replace('pt', '');
-                graphHeight = +selection.datum().attributes.height.replace('pt', '');
-                graphviz.zoomTranslateExtent([[rightPad + graphWidth - svgWidth, bottomPad - svgHeight], [svgWidth - leftPad, svgHeight - topPad - graphHeight]])
-                selection
-                    .attr("width", svgWidth)
-                    .attr("height", svgHeight)
-                    .attr("viewBox", "0 0 " + svgWidth + " " + svgHeight);
-                datum.attributes.width = svgWidth;
-                datum.attributes.height = svgHeight;
-                datum.attributes.viewBox = " 0 0 " + svgWidth + " " + svgHeight;
-            }
-        }
+    $(function () {
+        $('[data-toggle="popover"]').popover()
     })
 </script>
 

@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import logger from 'morgan';
 import { registry as engineRegistry } from './engines';
+import { buildGraphFromEdges } from './graph';
 import { registry as jobRegistry } from './jobs';
 
 const app = express();
@@ -12,16 +13,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static('static'));
 
-app.get('/', (_, res) => {
-  res.render('index', { title: 'Hey', message: 'Hello there!' });
-});
-
 app.get('/ready', (_, res) => {
   res.status(200).send('OK');
 });
 
 app.get('/health', async (_, res) => {
   res.status(200).send('OK');
+});
+
+app.get('/jobs', async (_, res) => {
+  res.send({ engines: engineRegistry.getRegistered() });
 });
 
 app.post('/jobs', async (req, res) => {
@@ -66,6 +67,13 @@ app.get('/jobs/:id', async (req, res) => {
 app.get('/jobs/:id/results', async (req, res) => {
   const jobUUID = req.params.id;
 
+  const format = req.query.format || 'json';
+
+  if (!['json', 'graphviz'].includes(format)) {
+    res.status(400).send({ message: 'Invalid format', status: 'error' });
+    return;
+  }
+
   const job = jobRegistry.getJob(jobUUID);
   if (job === null) {
     res.status(404).send({ message: 'Job not found', status: 'error' });
@@ -77,12 +85,23 @@ app.get('/jobs/:id/results', async (req, res) => {
     return;
   }
 
-  res.status(200).send({
-    results: job.getResult(),
-    status: job.getStatus(),
-    type: job.getType(),
-    uuid: job.getUUID(),
-  });
+  switch (format) {
+    case 'json':
+      res.status(200).send({
+        results: job.getResult(),
+        status: job.getStatus(),
+        type: job.getType(),
+        uuid: job.getUUID(),
+      });
+      break;
+
+    case 'graphviz':
+      if (job.getType() === 'DISTANCE' || job.getType() === 'RELATED') {
+        const graph = buildGraphFromEdges(job.getResult().edges);
+        res.status(200).send(graph);
+      }
+      break;
+  }
 });
 
 export default app;

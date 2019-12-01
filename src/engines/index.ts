@@ -22,6 +22,10 @@ class EngineRegistry {
 
     this.engines[engine.name] = engine;
   }
+
+  public getRegistered(): string[] {
+    return Object.keys(this.engines);
+  }
 }
 
 export const registry = new EngineRegistry();

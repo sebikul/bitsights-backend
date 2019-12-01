@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { getTransactionsForAddress } from '../bcoin';
-import { Address, Edge, Engine, Job, JobCallback, Transaction } from '../models';
+import { Address, Edge, Engine, Job, Transaction } from '../models';
 import { registry as engineRegistry } from './index';
 
 const log = require('debug')('bitsights:engine:distance');
@@ -77,7 +77,7 @@ class DistanceJob extends Job<DistanceJobResult> {
       for (const output of transaction.outputs) {
 
         const newPath = _.clone(currentPath);
-        newPath.push({ source: address, transaction, target: output });
+        newPath.push(new Edge(address, output, transaction));
 
         log(`Pushing new edge: ${address.address} - ${transaction.hash} -> ${output.address}`);
 
@@ -101,25 +101,6 @@ class DistanceJob extends Job<DistanceJobResult> {
 export class DistanceEngine extends Engine<DistanceArgs, DistanceJobResult> {
   readonly name: string = 'DISTANCE';
 
-  execute(args: DistanceArgs, callback?: JobCallback<DistanceJobResult>): string {
-    const job = new DistanceJob(this.name, new Address(args.source), new Address(args.sink));
-
-    log(`Starting job for distance from ${args.source} to ${args.sink}`);
-
-    job.execute().then(() => {
-      log(`Job ${job.getUUID()} finished.`);
-
-      if (callback !== undefined) {
-        callback(job.getResult());
-      }
-    }).catch((reason) => {
-      log(`Job ${job.getUUID()} failed with reason: ${reason}`);
-      job.setFailed();
-    });
-
-    return job.getUUID();
-  }
-
   public validateArgs(args: DistanceArgs): object | undefined {
     if (!args.hasOwnProperty('source')) {
       return { field: 'source', message: 'missing field' };
@@ -127,6 +108,11 @@ export class DistanceEngine extends Engine<DistanceArgs, DistanceJobResult> {
     if (!args.hasOwnProperty('sink')) {
       return { field: 'sink', message: 'missing field' };
     }
+  }
+
+  protected buildJob(args: DistanceArgs): Job<DistanceJobResult> {
+    log(`Building job for distance from ${args.source} to ${args.sink}`);
+    return new DistanceJob(this.name, new Address(args.source), new Address(args.sink));
   }
 
 }

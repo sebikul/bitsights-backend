@@ -1,6 +1,6 @@
 import { flatten } from 'lodash';
 import { getTransactionsForAddress } from '../bcoin';
-import { Address, Edge, Engine, Job, JobCallback, Transaction } from '../models';
+import { Address, Edge, Engine, Job, Transaction } from '../models';
 import { registry as engineRegistry } from './index';
 
 const log = require('debug')('bitsights:engine:related');
@@ -79,7 +79,7 @@ class RelatedJob extends Job<RelatedJobResult> {
 
     if (fromTransaction !== undefined) {
       relatedPromises.push(
-        this.findChangeAddressForTx(fromTransaction, address).then(value => value ? [value] : []),
+        this.findChangeAddressForTx(fromTransaction, address),
       );
     }
 
@@ -91,38 +91,55 @@ class RelatedJob extends Job<RelatedJobResult> {
   private async findChangeAddressForTx(
     fromTransaction: Transaction,
     fromAddress: Address,
-  ): Promise<Address | undefined> {
+  ): Promise<Address[]> {
     if (fromTransaction.outputs === undefined) {
-      return;
+      return [];
     }
+
+    log(`Finding change address for Tx ${fromTransaction.hash}`);
 
     if (fromTransaction.outputs.length !== 2) {
       // This transaction has multiple outputs or a single one
-      return;
+      return [];
     }
+
+    let candidate: Address | undefined = undefined;
 
     for (const output of fromTransaction.outputs) {
       // Find all the transaction previous to _fromTransaction_. If this was the first time
       // it was seen, it must be the change address.
-      const addressTransactions = (await getTransactionsForAddress(output))
-        .filter(tx => tx.time < fromTransaction.time);
+      const addressTransactions = await getTransactionsForAddress(output);
 
-      if (
-        addressTransactions.length === 1 &&
-        addressTransactions[0].hash === fromTransaction.hash
-      ) {
+      const previousAddressTransactions = addressTransactions
+        .filter(tx => tx.time > 0 && tx.time < fromTransaction.time);
+
+      if (previousAddressTransactions.length === 0) {
         // This is the first time we see this address, it must be the change address
-        this.createEdge(fromAddress, output, fromTransaction);
-        return output;
+
+        if (candidate !== undefined) {
+          // The two addresses are candidates. Let's ignore both.
+          return [];
+        }
+
+        candidate = output;
       }
     }
+
+    if (candidate === undefined) {
+      // No address is candidate
+      return [];
+    }
+
+    this.createEdge(fromAddress, candidate, fromTransaction, true);
+
+    return [candidate];
   }
 
-  private createEdge(from: Address, to: Address, tx?: Transaction) {
+  private createEdge(from: Address, to: Address, tx?: Transaction, isChange: boolean = false) {
     this.addresses.push(to);
 
     if (tx !== undefined) {
-      this.edges.push(new Edge(from, to, tx));
+      this.edges.push(new Edge(from, to, tx, isChange));
     }
   }
 }
@@ -130,29 +147,15 @@ class RelatedJob extends Job<RelatedJobResult> {
 export class RelatedAddressEngine extends Engine<RelatedArgs, RelatedJobResult> {
   readonly name: string = 'RELATED';
 
-  execute(args: RelatedArgs, callback?: JobCallback<RelatedJobResult>): string {
-    const job = new RelatedJob(this.name, new Address(args.needle_address));
-
-    log(`Starting job for related addresses to ${args.needle_address}`);
-
-    job.execute().then(() => {
-      log(`Job ${job.getUUID()} finished.`);
-
-      if (callback !== undefined) {
-        callback(job.getResult());
-      }
-    }).catch((reason) => {
-      log(`Job ${job.getUUID()} failed with reason: ${reason}`);
-      job.setFailed();
-    });
-
-    return job.getUUID();
-  }
-
   public validateArgs(args: RelatedArgs): object | undefined {
     if (!args.hasOwnProperty('needle_address')) {
       return { field: 'needle_address', message: 'missing field' };
     }
+  }
+
+  protected buildJob(args: RelatedArgs): Job<RelatedJobResult> {
+    log(`Building job for related addresses to ${args.needle_address}`);
+    return new RelatedJob(this.name, new Address(args.needle_address));
   }
 }
 
