@@ -1,15 +1,23 @@
 const { NodeClient } = require('bclient');
 import config from 'dos-config';
 import _ from 'lodash';
-import redis from 'redis';
+import redis, { RedisClient } from 'redis';
 import * as request from 'request-promise-native';
 import { promisify } from 'util';
 import { Address, Transaction } from './models';
 
 const log = require('debug')('bitsights:bcoin');
 
-const redisClient = redis.createClient();
-const getAsync = promisify(redisClient.get).bind(redisClient);
+let redisClient: RedisClient;
+let getAsync: any;
+
+if (config.redis.enabled) {
+  redisClient = redis.createClient({
+    host: config.redis.host,
+    port: config.redis.port,
+  });
+  getAsync = promisify(redisClient.get).bind(redisClient);
+}
 
 // const setAsync = promisify(redisClient.set).bind(redisClient);
 

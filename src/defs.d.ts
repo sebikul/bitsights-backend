@@ -13,6 +13,7 @@ declare module 'dos-config' {
     redis: {
       enabled: boolean;
       host: string;
+      port: number;
     };
   }
 

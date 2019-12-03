@@ -9,6 +9,7 @@
   },
   "redis": {
     "enabled": false,
-    "host": "redis"
+    "host": "redis",
+    "port": 6379
   }
 }
