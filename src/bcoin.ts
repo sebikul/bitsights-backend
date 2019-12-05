@@ -80,16 +80,18 @@ export async function getTransactionsForAddress(address: Address): Promise<Trans
     redisClient.set(address.address, JSON.stringify(transactions));
   }
 
-  return transactions.map((tx) => {
-    const inputs = tx.inputs
-      .map(input => input.coin)
-      .filter(coin => coin !== undefined) // Filter Coinbase transactions
-      .map(coin => new Address(coin.address));
+  return transactions
+    .map((tx) => {
+      const inputs = tx.inputs
+        .map(input => input.coin)
+        .filter(coin => coin !== undefined) // Filter Coinbase transactions
+        .map(coin => new Address(coin.address));
 
-    const outputs = tx.outputs.map(output => new Address(output.address));
+      const outputs = tx.outputs.map(output => new Address(output.address));
 
-    return new Transaction(tx.hash, tx.time, inputs, outputs);
-  });
+      return new Transaction(tx.hash, tx.time, inputs, outputs);
+    })
+    .filter(tx => tx.time !== 0);
 }
 
 export async function getBalance(addresses: Address[]) {

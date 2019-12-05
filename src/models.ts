@@ -1,4 +1,5 @@
 import uuidv4 from 'uuid/v4';
+import { getTransactionsForAddress } from './bcoin';
 import { registry as jobRegistry } from './jobs';
 
 const log = require('debug')('bitsights:models');
@@ -137,6 +138,42 @@ export class Transaction {
     }
 
     return false;
+  }
+
+  public async getChangeAddress(): Promise<Address | undefined> {
+    if (this.outputs === undefined || this.outputs.length !== 2) {
+      // This transaction has multiple outputs or a single one
+      return;
+    }
+
+    let candidate: Address | undefined = undefined;
+
+    for (const output of this.outputs) {
+      // Find all the transaction previous to _fromTransaction_. If this was the first time
+      // it was seen, it must be the change address.
+      const addressTransactions = await getTransactionsForAddress(output);
+
+      const previousAddressTransactions = addressTransactions
+        .filter(tx => tx.time > 0 && tx.time < this.time);
+
+      if (previousAddressTransactions.length === 0) {
+        // This is the first time we see this address, it must be the change address
+
+        if (candidate !== undefined) {
+          // The two addresses are candidates. Let's ignore both.
+          return;
+        }
+
+        candidate = output;
+      }
+    }
+
+    if (candidate === undefined) {
+      // No address is candidate
+      return;
+    }
+
+    return candidate;
   }
 }
 

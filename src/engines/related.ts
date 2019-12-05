@@ -52,12 +52,14 @@ class RelatedJob extends Job<RelatedJobResult> {
     log(`Finding new edges from ${address.address}`);
 
     // Filter transactions where _address_ was not an input
-    const participatedInTransactions = (await getTransactionsForAddress(address))
+    const participatedInTransactions = await getTransactionsForAddress(address);
+
+    const wasAnInputTransactions = participatedInTransactions
       .filter(tx => fromTransaction === undefined ? true : tx.hash !== fromTransaction.hash)
       .filter(tx => tx.inputs !== undefined && tx.containsInputAddress(address));
 
     // We now have all the transactions in which _address_ was an input
-    for (const tx of participatedInTransactions) {
+    for (const tx of wasAnInputTransactions) {
       // Filter out current address from the inputs
       const filteredInputs = (tx.inputs as Address[])
         .filter(value => value.address !== address.address);
@@ -81,6 +83,24 @@ class RelatedJob extends Job<RelatedJobResult> {
       relatedPromises.push(
         this.findChangeAddressForTx(fromTransaction, address),
       );
+    } else {
+      for (const transaction of participatedInTransactions) {
+        const changeAddress = await transaction.getChangeAddress();
+
+        if (changeAddress && changeAddress.address === address.address && transaction.inputs) {
+
+          for (const input of transaction.inputs) {
+            if (this.isPresentInCorpus(input)) {
+              // We have already traversed this node
+              continue;
+            }
+
+            this.createEdge(address, input, transaction, true);
+
+            relatedPromises.push(this.findRelatedTo(input, transaction));
+          }
+        }
+      }
     }
 
     const related = await Promise.all(relatedPromises);
@@ -98,53 +118,26 @@ class RelatedJob extends Job<RelatedJobResult> {
 
     log(`Finding change address for Tx ${fromTransaction.hash}`);
 
-    if (fromTransaction.outputs.length !== 2) {
-      // This transaction has multiple outputs or a single one
+    const changeAddress = await fromTransaction.getChangeAddress();
+
+    if (changeAddress === undefined || changeAddress.address === fromAddress.address) {
       return [];
     }
 
-    let candidate: Address | undefined = undefined;
-
-    for (const output of fromTransaction.outputs) {
-      // Find all the transaction previous to _fromTransaction_. If this was the first time
-      // it was seen, it must be the change address.
-      const addressTransactions = await getTransactionsForAddress(output);
-
-      const previousAddressTransactions = addressTransactions
-        .filter(tx => tx.time > 0 && tx.time < fromTransaction.time);
-
-      if (previousAddressTransactions.length === 0) {
-        // This is the first time we see this address, it must be the change address
-
-        if (candidate !== undefined || output.address === fromAddress.address) {
-          // The two addresses are candidates. Let's ignore both.
-          return [];
-        }
-
-        candidate = output;
-      }
-    }
-
-    if (candidate === undefined) {
-      // No address is candidate
-      return [];
-    }
-
-    const wasPresentInCorpus = this.isPresentInCorpus(candidate);
-
-    this.createEdge(fromAddress, candidate, fromTransaction, true);
+    const wasPresentInCorpus = this.isPresentInCorpus(changeAddress);
 
     const relatedPromises: Promise<Address[]>[] = [];
 
     if (!wasPresentInCorpus) {
-      const relatedToChangeAddress = this.findRelatedTo(candidate, fromTransaction);
+      this.createEdge(fromAddress, changeAddress, fromTransaction, true);
+      const relatedToChangeAddress = this.findRelatedTo(changeAddress, fromTransaction);
       relatedPromises.push(relatedToChangeAddress);
     }
 
     const resolved = await Promise.all(relatedPromises);
     const resolvedFlattened = flatten(resolved);
 
-    resolvedFlattened.push(candidate);
+    resolvedFlattened.push(changeAddress);
 
     return resolvedFlattened;
   }
