@@ -106,20 +106,22 @@ export abstract class Job<Result> {
 
 export class Address {
   public readonly address: string;
+  public readonly value?: number;
 
-  constructor(address: string) {
+  constructor(address: string, value?: number) {
     this.address = address;
+    this.value = value;
   }
 }
 
 export class Transaction {
-  public readonly inputs?: Address[];
-  public readonly outputs?: Address[];
+  public readonly inputs: Address[];
+  public readonly outputs: Address[];
 
   public readonly hash: string;
   public readonly time: number;
 
-  constructor(hash: string, time: number, inputs?: Address[], outputs?: Address[]) {
+  constructor(hash: string, time: number, inputs: Address[], outputs: Address[]) {
     this.inputs = inputs;
     this.outputs = outputs;
     this.hash = hash;

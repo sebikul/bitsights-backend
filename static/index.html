@@ -85,6 +85,7 @@
                                 data-content="Find the distance between two addresses. More info in the help section.">
                             <img src="/icons/question-fill.svg" width="24" height="24" title="Distance address search"
                                  alt="">
+                        </button>
                     </h4>
                 </div>
                 <div class="card-body">
@@ -122,6 +123,7 @@
                                 data-content="Find the relationship between two clusters of addresses. More info in the help section.">
                             <img src="/icons/question-fill.svg" width="24" height="24" title="Distance address search"
                                  alt="">
+                        </button>
                     </h4>
                 </div>
                 <div class="card-body">
@@ -151,10 +153,40 @@
 
     </div>
 
-    <div class="row justify-content-center">
-        <div class="col">
+    <div class="row margin-top">
 
+        <div class="col col-sm-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Balance time series
+                        <button type="button" class="btn link" data-container="body" data-toggle="popover"
+                                data-placement="right"
+                                data-content="Build a time series of this wallet's balance. More info in the help section.">
+                            <img src="/icons/question-fill.svg" width="24" height="24"
+                                 title="Wallet balance time series"
+                                 alt="">
+                        </button>
+                    </h4>
+                </div>
+                <div class="card-body">
+
+                    <form>
+                        <div class="form-group">
+                            <label for="timedBalanceSourceAddress">Source address</label>
+                            <input type="text" class="form-control" id="timedBalanceSourceAddress"
+                                   value="n45tjXVF3KdTcgWtHo41vXCyXXZWL8D9bg">
+                        </div>
+
+                        <button class="btn btn-primary" id="timed-balance-search">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Start
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
+
+
     </div>
 
 
@@ -170,6 +202,27 @@
                 </div>
                 <div class="modal-body">
                     <div id="graph" style="text-align: center;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade bd-example-modal-xl" tabindex="-1" role="dialog" id="chart-modal">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Result</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <canvas id="chart1"></canvas>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -195,6 +248,8 @@
 <script src="/js/d3.js"></script>
 <script src="/js/viz.js" type="javascript/worker"></script>
 <script src="/js/d3-graphviz.js"></script>
+<script src="/js/Chart.bundle.min.js"></script>
+<script src="/js/moment.js"></script>
 <script src="/main.js"></script>
 
 <script>

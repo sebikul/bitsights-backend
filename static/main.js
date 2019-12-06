@@ -1,5 +1,15 @@
 $(document).ready(function () {
 
+    window.chartColors = {
+        red: 'rgb(255, 99, 132)',
+        orange: 'rgb(255, 159, 64)',
+        yellow: 'rgb(255, 205, 86)',
+        green: 'rgb(75, 192, 192)',
+        blue: 'rgb(54, 162, 235)',
+        purple: 'rgb(153, 102, 255)',
+        grey: 'rgb(201, 203, 207)'
+    };
+
     const relatedAddressSearchButton = $("#related-address-search");
     relatedAddressSearchButton.find('span').hide();
 
@@ -9,9 +19,11 @@ $(document).ready(function () {
     const relationshipAddressSearchButton = $("#relationship-address-search");
     relationshipAddressSearchButton.find('span').hide();
 
-
     const relatedAddressBalanceButton = $("#related-address-balance-button");
     relatedAddressBalanceButton.find('span').hide();
+
+    const timedBalanceButton = $("#timed-balance-search");
+    timedBalanceButton.find('span').hide();
 
     function renderGraph(dotFile, callback) {
         const margin = 20; // to avoid scrollbars
@@ -83,6 +95,118 @@ $(document).ready(function () {
             console.log(JSON.stringify(data));
 
             $('#related-address-balance').text(`${data.results.balance / 100000000} BTC`);
+        });
+    }
+
+    function timedBalanceResultAvailable(uuid, button) {
+
+        button.attr("disabled", false);
+        button.find('span').hide();
+
+        $.get(`/jobs/${uuid}/results`, function (data, _) {
+            console.log(JSON.stringify(data));
+
+            const dataset = data.results.dataset.map(entry => {
+                return {t: moment.unix(entry.t), y: entry.y}
+            });
+
+
+            var ctx = document.getElementById('chart1').getContext('2d');
+            ctx.canvas.width = 1000;
+            ctx.canvas.height = 300;
+
+            var color = Chart.helpers.color;
+            var cfg = {
+                data: {
+                    datasets: [{
+                        label: 'Timed wallet balance',
+                        backgroundColor: color(window.chartColors.red).alpha(0.5).rgbString(),
+                        borderColor: window.chartColors.red,
+                        data: dataset,
+                        type: 'line',
+                        pointRadius: 0,
+                        fill: false,
+                        lineTension: 0,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    animation: {
+                        duration: 0
+                    },
+                    scales: {
+                        xAxes: [{
+                            type: 'time',
+                            distribution: 'series',
+                            offset: true,
+                            ticks: {
+                                major: {
+                                    enabled: true,
+                                    fontStyle: 'bold'
+                                },
+                                source: 'data',
+                                autoSkip: true,
+                                autoSkipPadding: 75,
+                                maxRotation: 0,
+                                sampleSize: 100
+                            },
+                            // afterBuildTicks: function(scale, ticks) {
+                            //     var majorUnit = scale._majorUnit;
+                            //     var firstTick = ticks[0];
+                            //     var i, ilen, val, tick, currMajor, lastMajor;
+                            //
+                            //     val = moment(ticks[0].value);
+                            //     if ((majorUnit === 'minute' && val.second() === 0)
+                            //         || (majorUnit === 'hour' && val.minute() === 0)
+                            //         || (majorUnit === 'day' && val.hour() === 9)
+                            //         || (majorUnit === 'month' && val.date() <= 3 && val.isoWeekday() === 1)
+                            //         || (majorUnit === 'year' && val.month() === 0)) {
+                            //         firstTick.major = true;
+                            //     } else {
+                            //         firstTick.major = false;
+                            //     }
+                            //     lastMajor = val.get(majorUnit);
+                            //
+                            //     for (i = 1, ilen = ticks.length; i < ilen; i++) {
+                            //         tick = ticks[i];
+                            //         val = moment(tick.value);
+                            //         currMajor = val.get(majorUnit);
+                            //         tick.major = currMajor !== lastMajor;
+                            //         lastMajor = currMajor;
+                            //     }
+                            //     return ticks;
+                            // }
+                        }],
+                        yAxes: [{
+                            gridLines: {
+                                drawBorder: false
+                            },
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Balance (mBTC)'
+                            }
+                        }]
+                    },
+                    tooltips: {
+                        intersect: false,
+                        mode: 'index',
+                        callbacks: {
+                            label: function (tooltipItem, myData) {
+                                var label = myData.datasets[tooltipItem.datasetIndex].label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += parseFloat(tooltipItem.value).toFixed(2);
+                                return label;
+                            }
+                        }
+                    }
+                }
+            };
+
+            var chart = new Chart(ctx, cfg);
+            chart.update();
+            $('#chart-modal').modal('show');
         });
     }
 
@@ -248,5 +372,46 @@ $(document).ready(function () {
         })
 
     });
+
+    timedBalanceButton.click(function (event) {
+        event.stopImmediatePropagation();
+        event.stopPropagation();
+        event.preventDefault();
+
+        timedBalanceButton.attr("disabled", true);
+        timedBalanceButton.find('span').show();
+
+        const source = $('#timedBalanceSourceAddress').val();
+        console.log(`Running timed balance query for ${source}`);
+
+        const data = {
+            job_type: 'TIMED_BALANCE',
+            args: {
+                needle_address: source,
+            }
+        };
+
+        $.ajax({
+            url: '/jobs',
+            dataType: 'json',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            processData: false,
+            success: function (data, textStatus, _) {
+                if (data.status !== 'created') {
+                    alert('Failed to create job.' + JSON.stringify(data.message))
+
+                }
+                const jobUUID = data.uuid;
+                statusCallback(jobUUID, timedBalanceResultAvailable, timedBalanceButton)
+            },
+            error: function (jqXhr, textStatus, errorThrown) {
+                console.log(errorThrown);
+            }
+        })
+
+    });
+
 
 });

@@ -5,6 +5,7 @@ import { BalanceEngine } from './engines/balance';
 import { DistanceEngine } from './engines/distance';
 import { RelatedAddressEngine } from './engines/related';
 import { RelationshipEngine } from './engines/relationship';
+import { TimedBalanceEngine } from './engines/timedbalance';
 import { buildGraphFromEdges } from './graph';
 
 config.env = process.env.NODE_ENV || config.env;
@@ -99,6 +100,17 @@ function findBalance(source: string) {
   log(`Finding balance of cluster ${source}. Job ${jobUUID}`);
 }
 
+function findTimedBalance(source: string) {
+  const engine = new TimedBalanceEngine();
+
+  const jobUUID = engine.execute(
+    { needle_address: source },
+    result => log(`The balance is ${result ? result.dataset : 0}`),
+  );
+
+  log(`Finding timed balance of cluster ${source}. Job ${jobUUID}`);
+}
+
 yargs
   .command(['start'], 'run the daemon', yargs => yargs, startDaemon)
   .command(
@@ -169,5 +181,16 @@ yargs
       },
     },
     args => findBalance(args.source),
+  )
+  .command(
+    'timed-balance <source>',
+    'Find the balance of cluster over time', {
+      source: {
+        default: '',
+        describe: 'Source address',
+        type: 'string',
+      },
+    },
+    args => findTimedBalance(args.source),
   )
   .wrap(yargs.terminalWidth()).argv;

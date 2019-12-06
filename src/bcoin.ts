@@ -23,6 +23,7 @@ if (config.redis.enabled) {
 
 interface CoinResponse {
   address: string;
+  value: number;
 }
 
 interface InputResponse {
@@ -77,7 +78,7 @@ export async function getTransactionsForAddress(address: Address): Promise<Trans
   }
 
   if (config.redis.enabled && shouldWriteBack) {
-    redisClient.set(address.address, JSON.stringify(transactions));
+    redisClient.set(address.address, JSON.stringify(transactions), 'EX', 3600);
   }
 
   return transactions
@@ -85,7 +86,7 @@ export async function getTransactionsForAddress(address: Address): Promise<Trans
       const inputs = tx.inputs
         .map(input => input.coin)
         .filter(coin => coin !== undefined) // Filter Coinbase transactions
-        .map(coin => new Address(coin.address));
+        .map(coin => new Address(coin.address, coin.value));
 
       const outputs = tx.outputs.map(output => new Address(output.address));
 
