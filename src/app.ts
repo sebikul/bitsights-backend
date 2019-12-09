@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import logger from 'morgan';
+import * as request from 'request-promise-native';
 import { registry as engineRegistry } from './engines';
 import { buildBigraphFromEdges, buildGraphFromEdges } from './graph';
 import { registry as jobRegistry } from './jobs';
@@ -44,7 +45,7 @@ app.post('/jobs', async (req, res) => {
 
   const jobUUID = engine.execute(args);
 
-  res.status(202).send({ status: 'created', uuid: jobUUID });
+  res.status(202).send({ status: 'created', time: new Date(), uuid: jobUUID });
 
 });
 
@@ -59,6 +60,7 @@ app.get('/jobs/:id', async (req, res) => {
 
   res.status(200).send({
     status: job.getStatus(),
+    time: new Date(),
     type: job.getType(),
     uuid: job.getUUID(),
   });
@@ -117,6 +119,48 @@ app.get('/jobs/:id/results', async (req, res) => {
       }
 
   }
+});
+
+app.get('/addrs/:id', async (req, res) => {
+  const options = {
+    json: true,
+    uri: `https://api.blockcypher.com/v1/btc/test3/addrs/${req.params.id}/full?limit=50`,
+  };
+
+  const data = await request.get(options);
+  console.log('SE VIENEEEEEE LA DATAAAAAAAAAAAAAAAAAAAAAA');
+  console.log(data);
+
+  res.status(200).send(data);
+
+});
+
+app.get('/transactions/:id', async (req, res) => {
+  const options = {
+    json: true,
+    uri: `https://api.blockcypher.com/v1/btc/main/txs/${req.params.id}?limit=50&includeHex=true`,
+  };
+
+  const data = await request.get(options);
+  console.log('SE VIENEEEEEE LA DATAAAAAAAAAAAAAAAAAAAAAA');
+  console.log(data);
+
+  res.status(200).send(data);
+
+});
+
+app.get('/blocks/:id', async (req, res) => {
+  const options = {
+    json: true,
+    uri: `https://api.blockcypher.com/v1/btc/test3/blocks/${req.params.id}`,
+  };
+
+  const data = await request.get(options);
+  console.log('SE VIENEEEEEE LA DATAAAAAAAAAAAAAAAAAAAAAA');
+  console.log(data);
+
+  res.status(200).send(data);
+
 });
 
 export default app;
