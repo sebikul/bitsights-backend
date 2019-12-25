@@ -24,7 +24,7 @@ class BalanceJob extends Job<BalanceJobResult> {
   }
 
   public async execute(): Promise<void> {
-    log('Finished balance for cluster');
+    log('Finding balance for cluster');
 
     const engine = new RelatedAddressEngine();
 

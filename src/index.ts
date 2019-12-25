@@ -6,6 +6,7 @@ import { DistanceEngine } from './engines/distance';
 import { RelatedAddressEngine } from './engines/related';
 import { RelationshipEngine } from './engines/relationship';
 import { TimedBalanceEngine } from './engines/timedbalance';
+import { WalletEngine } from './engines/wallet';
 import { buildGraphFromEdges } from './graph';
 
 config.env = process.env.NODE_ENV || config.env;
@@ -111,6 +112,17 @@ function findTimedBalance(source: string) {
   log(`Finding timed balance of cluster ${source}. Job ${jobUUID}`);
 }
 
+function findWalletProbability(source: string) {
+  const engine = new WalletEngine();
+
+  const jobUUID = engine.execute(
+    { needle_address: source },
+    result => log(`The probability of being a wallet is ${result ? result.probability : 0}`),
+  );
+
+  log(`Finding probability of being a wallet for ${source}. Job ${jobUUID}`);
+}
+
 yargs
   .command(['start'], 'run the daemon', yargs => yargs, startDaemon)
   .command(
@@ -192,5 +204,16 @@ yargs
       },
     },
     args => findTimedBalance(args.source),
+  )
+  .command(
+    'wallet <source>',
+    'Find the probability of being a wallet', {
+      source: {
+        default: '',
+        describe: 'Source address',
+        type: 'string',
+      },
+    },
+    args => findWalletProbability(args.source),
   )
   .wrap(yargs.terminalWidth()).argv;

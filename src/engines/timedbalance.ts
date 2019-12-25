@@ -29,7 +29,7 @@ class TimedBalanceJob extends Job<TimedBalanceJobResult> {
   }
 
   public async execute(): Promise<void> {
-    log('Finished balance for cluster');
+    log('Finding balance for cluster');
 
     const engine = new RelatedAddressEngine();
 
@@ -37,14 +37,14 @@ class TimedBalanceJob extends Job<TimedBalanceJobResult> {
       { needle_address: this.needleAddress.address },
     );
 
+    const rawAddressCluster: string[] = cluster.addresses.map(a => a.address);
+
     const transactions: Transaction[] = [];
 
     for (const address of cluster.addresses) {
       const thisTransactions = await getTransactionsForAddress(address);
       transactions.push(...thisTransactions);
     }
-
-    // const addresses = cluster.addresses.map(a => a.address);
 
     const dataset: DatasetEntry[] = [];
     let currentBalance = 0;
@@ -54,11 +54,14 @@ class TimedBalanceJob extends Job<TimedBalanceJobResult> {
     for (const transaction of transactions) {
       let balanceAfterThisTx = currentBalance;
 
-      for (const input of transaction.inputs) {
+      const validInputs = transaction.inputs.filter(i => rawAddressCluster.includes(i.address));
+      const validOutputs = transaction.outputs.filter(o => rawAddressCluster.includes(o.address));
+
+      for (const input of validInputs) {
         balanceAfterThisTx += input.value || 0;
       }
 
-      for (const output of transaction.outputs) {
+      for (const output of validOutputs) {
         balanceAfterThisTx += output.value || 0;
       }
 
@@ -66,9 +69,10 @@ class TimedBalanceJob extends Job<TimedBalanceJobResult> {
       currentBalance = balanceAfterThisTx;
     }
 
-    this.setResult({
-      dataset,
-    });
+    this.setResult(
+      {
+        dataset,
+      });
   }
 }
 
