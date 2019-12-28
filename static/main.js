@@ -198,7 +198,7 @@ $(document).ready(function () {
                             },
                             scaleLabel: {
                                 display: true,
-                                labelString: 'Balance (mBTC)'
+                                labelString: 'Balance (BTC)'
                             }
                         }]
                     },

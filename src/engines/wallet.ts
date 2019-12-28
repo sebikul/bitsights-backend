@@ -1,5 +1,5 @@
-import { getTransactionsForAddress } from '../bcoin';
 import { Address, Engine, Job, Transaction } from '../models';
+import { getTransactionsForAddress } from '../providers';
 import { registry as engineRegistry } from './index';
 import { RelatedAddressEngine } from './related';
 

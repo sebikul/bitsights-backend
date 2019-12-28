@@ -1,5 +1,5 @@
-import { getTransactionsForAddress } from '../bcoin';
 import { Address, Engine, Job, Transaction } from '../models';
+import { getTransactionsForAddress } from '../providers';
 import { registry as engineRegistry } from './index';
 import { RelatedAddressEngine } from './related';
 
@@ -55,7 +55,7 @@ class BalanceJob extends Job<BalanceJobResult> {
       let balanceAfterThisTx = balance;
 
       for (const input of transaction.inputs) {
-        balanceAfterThisTx += input.value || 0;
+        balanceAfterThisTx -= input.value || 0;
       }
 
       for (const output of transaction.outputs) {
@@ -65,9 +65,10 @@ class BalanceJob extends Job<BalanceJobResult> {
       balance = balanceAfterThisTx;
     }
 
-    this.setResult({
-      balance,
-    });
+    this.setResult(
+      {
+        balance,
+      });
   }
 }
 

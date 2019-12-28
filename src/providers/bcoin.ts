@@ -1,10 +1,9 @@
 const { NodeClient } = require('bclient');
 import config from 'dos-config';
-import _ from 'lodash';
 import redis, { RedisClient } from 'redis';
-import * as request from 'request-promise-native';
 import { promisify } from 'util';
-import { Address, Transaction } from './models';
+import { Address, Transaction } from '../models';
+import { Provider } from './types';
 
 const log = require('debug')('bitsights:bcoin');
 
@@ -12,10 +11,11 @@ let redisClient: RedisClient;
 let getAsync: any;
 
 if (config.redis.enabled) {
-  redisClient = redis.createClient({
-    host: config.redis.host,
-    port: config.redis.port,
-  });
+  redisClient = redis.createClient(
+    {
+      host: config.redis.host,
+      port: config.redis.port,
+    });
   getAsync = promisify(redisClient.get).bind(redisClient);
 }
 
@@ -32,6 +32,7 @@ interface InputResponse {
 
 interface OutputResponse {
   address: string;
+  value: number;
 }
 
 interface TransactionResponse {
@@ -58,7 +59,9 @@ async function performTransactionQuery(address: Address): Promise<TransactionRes
     });
 }
 
-export async function getTransactionsForAddress(address: Address): Promise<Transaction[]> {
+export const getTransactionsForAddress: Provider = async (
+  address: Address,
+): Promise<Transaction[]> => {
 
   log(`Querying blockchain for address ${address.address}`);
 
@@ -66,7 +69,7 @@ export async function getTransactionsForAddress(address: Address): Promise<Trans
   let shouldWriteBack = false;
 
   if (config.redis.enabled) {
-    const data = await getAsync(address.address);
+    const data = await getAsync(`bcoin_${address.address}`);
     if (data === null) {
       shouldWriteBack = true;
       transactions = await performTransactionQuery(address);
@@ -78,7 +81,7 @@ export async function getTransactionsForAddress(address: Address): Promise<Trans
   }
 
   if (config.redis.enabled && shouldWriteBack) {
-    redisClient.set(address.address, JSON.stringify(transactions), 'EX', 3600);
+    redisClient.set(`bcoin_${address.address}`, JSON.stringify(transactions), 'EX', 3600);
   }
 
   return transactions
@@ -86,25 +89,12 @@ export async function getTransactionsForAddress(address: Address): Promise<Trans
       const inputs = tx.inputs
         .map(input => input.coin)
         .filter(coin => coin !== undefined) // Filter Coinbase transactions
-        .map(coin => new Address(coin.address, coin.value));
+        .map(coin => new Address(coin.address, coin.value / 100000000));
 
-      const outputs = tx.outputs.map(output => new Address(output.address));
+      const outputs = tx.outputs
+        .map(output => new Address(output.address, output.value / 100000000));
 
       return new Transaction(tx.hash, tx.time, inputs, outputs);
     })
     .filter(tx => tx.time !== 0);
-}
-
-export async function getBalance(addresses: Address[]) {
-
-  const addressList = addresses.map(address => address.address).join('|');
-
-  const options = {
-    json: true,
-    uri: `https://${config.bcoin.testnet ? 'testnet.' : ''}blockchain.info/balance?active=${addressList}`,
-  };
-
-  const data = await request.get(options);
-
-  return _.sumBy(Object.values(data), 'final_balance');
-}
+};

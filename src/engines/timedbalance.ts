@@ -1,5 +1,5 @@
-import { getTransactionsForAddress } from '../bcoin';
 import { Address, Engine, Job, Transaction } from '../models';
+import { getTransactionsForAddress } from '../providers';
 import { registry as engineRegistry } from './index';
 import { RelatedAddressEngine } from './related';
 
@@ -62,7 +62,7 @@ class TimedBalanceJob extends Job<TimedBalanceJobResult> {
       }
 
       for (const output of validOutputs) {
-        balanceAfterThisTx += output.value || 0;
+        balanceAfterThisTx -= output.value || 0;
       }
 
       dataset.push({ t: transaction.time, y: balanceAfterThisTx });
