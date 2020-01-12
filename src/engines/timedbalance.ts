@@ -58,11 +58,11 @@ class TimedBalanceJob extends Job<TimedBalanceJobResult> {
       const validOutputs = transaction.outputs.filter(o => rawAddressCluster.includes(o.address));
 
       for (const input of validInputs) {
-        balanceAfterThisTx += input.value || 0;
+        balanceAfterThisTx -= input.value ?? 0;
       }
 
       for (const output of validOutputs) {
-        balanceAfterThisTx -= output.value || 0;
+        balanceAfterThisTx += output.value ?? 0;
       }
 
       dataset.push({ t: transaction.time, y: balanceAfterThisTx });
