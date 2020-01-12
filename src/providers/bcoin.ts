@@ -48,6 +48,7 @@ const clientOptions = {
   network: config.bcoin.testnet ? 'testnet' : 'main',
   port: config.bcoin.port,
   ssl: true,
+  timeout: 600000,
 };
 
 const client = new NodeClient(clientOptions);
@@ -81,10 +82,10 @@ export const getTransactionsForAddress: Provider = async (
   }
 
   if (config.redis.enabled && shouldWriteBack) {
-    redisClient.set(`bcoin_${address.address}`, JSON.stringify(transactions), 'EX', 3600);
+    redisClient.set(`bcoin_${address.address}`, JSON.stringify(transactions ?? []), 'EX', 3600);
   }
 
-  return transactions
+  return (transactions ?? [])
     .map((tx) => {
       const inputs = tx.inputs
         .map(input => input.coin)
