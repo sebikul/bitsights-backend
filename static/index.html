@@ -187,6 +187,42 @@
         </div>
 
 
+        <div class="col col-sm-4 ">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Wallet probability
+                        <button type="button" class="btn link" data-container="body" data-toggle="popover"
+                                data-placement="right"
+                                data-content="Calculates the probability of the cluster of addresses beinng managed by a wallet.">
+                            <img src="/icons/question-fill.svg" width="24" height="24" title="Related address search"
+                                 alt="">
+                        </button>
+                    </h4>
+                </div>
+                <div class="card-body">
+
+                    <form>
+                        <div class="form-group">
+                            <label for="relatedSourceAddress">Source address</label>
+                            <input type="text" class="form-control" id="walletSourceAddress"
+                                   value="n45tjXVF3KdTcgWtHo41vXCyXXZWL8D9bg">
+                        </div>
+
+                        <button class="btn btn-secondary" id="wallet-probability-button">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Calculate wallet probability
+                        </button>
+
+                        <span class="align-middle ml-3" id="wallet-probability">
+
+                        </span>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
     </div>
 
 

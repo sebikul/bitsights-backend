@@ -42,5 +42,5 @@ function renderEdge(edge: Edge, indent: string = '  ') {
 
   const color = edge.isChange ? 'color = "coral"' : '';
 
-  return `${indent}"${edge.source.address}" -> "${edge.target.address}" [ label = "${edge.transaction.hash}" ${color}]`;
+  return `${indent}"${edge.source.address}" -> "${edge.target.address}" [ label = "${edge.transaction.hash}" ${color} labelURL= "http://${edge.transaction.hash}"]`;
 }

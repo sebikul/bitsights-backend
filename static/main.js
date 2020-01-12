@@ -25,6 +25,9 @@ $(document).ready(function () {
     const timedBalanceButton = $("#timed-balance-search");
     timedBalanceButton.find('span').hide();
 
+    const walletButton = $("#wallet-probability-button");
+    walletButton.find('span').hide();
+
     function renderGraph(dotFile, callback) {
         const margin = 20; // to avoid scrollbars
         var svgWidth = window.innerWidth - margin;
@@ -95,6 +98,18 @@ $(document).ready(function () {
             console.log(JSON.stringify(data));
 
             $('#related-address-balance').text(`${data.results.balance / 100000000} BTC`);
+        });
+    }
+
+    function walletResultAvailable(uuid, button) {
+
+        button.attr("disabled", false);
+        button.find('span').hide();
+
+        $.get(`/jobs/${uuid}/results`, function (data, _) {
+            console.log(JSON.stringify(data));
+
+            $('#wallet-probability').text(`${data.results.probability}`);
         });
     }
 
@@ -183,7 +198,7 @@ $(document).ready(function () {
                             },
                             scaleLabel: {
                                 display: true,
-                                labelString: 'Balance (mBTC)'
+                                labelString: 'Balance (BTC)'
                             }
                         }]
                     },
@@ -405,6 +420,46 @@ $(document).ready(function () {
                 }
                 const jobUUID = data.uuid;
                 statusCallback(jobUUID, timedBalanceResultAvailable, timedBalanceButton)
+            },
+            error: function (jqXhr, textStatus, errorThrown) {
+                console.log(errorThrown);
+            }
+        })
+
+    });
+
+    walletButton.click(function (event) {
+        event.stopImmediatePropagation();
+        event.stopPropagation();
+        event.preventDefault();
+
+        timedBalanceButton.attr("disabled", true);
+        timedBalanceButton.find('span').show();
+
+        const source = $('#walletSourceAddress').val();
+        console.log(`Running wallet probability query for ${source}`);
+
+        const data = {
+            job_type: 'WALLET',
+            args: {
+                needle_address: source,
+            }
+        };
+
+        $.ajax({
+            url: '/jobs',
+            dataType: 'json',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            processData: false,
+            success: function (data, textStatus, _) {
+                if (data.status !== 'created') {
+                    alert('Failed to create job.' + JSON.stringify(data.message))
+
+                }
+                const jobUUID = data.uuid;
+                statusCallback(jobUUID, walletResultAvailable, walletButton)
             },
             error: function (jqXhr, textStatus, errorThrown) {
                 console.log(errorThrown);

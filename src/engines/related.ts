@@ -1,6 +1,6 @@
 import { flatten } from 'lodash';
-import { getTransactionsForAddress } from '../bcoin';
 import { Address, Edge, Engine, Job, Transaction } from '../models';
+import { getTransactionsForAddress } from '../providers';
 import { registry as engineRegistry } from './index';
 
 const log = require('debug')('bitsights:engine:related');

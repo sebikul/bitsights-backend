@@ -1,6 +1,6 @@
 import uuidv4 from 'uuid/v4';
-import { getTransactionsForAddress } from './bcoin';
 import { registry as jobRegistry } from './jobs';
+import { getTransactionsForAddress } from './providers';
 
 const log = require('debug')('bitsights:models');
 
