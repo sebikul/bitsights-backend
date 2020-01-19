@@ -7,6 +7,7 @@ const log = require('debug')('bitsights:engine:wallet');
 
 interface WalletJobResult {
   probability: number;
+  conclusion: string;
 }
 
 interface WalletArgs {
@@ -50,9 +51,12 @@ class WalletJob extends Job<WalletJobResult> {
     const total = transactions.length;
     const probableFromWallet = transactions.filter(numberOfOutputs).length;
 
+    const probability = probableFromWallet / total;
+
     this.setResult(
       {
-        probability: probableFromWallet / total,
+        conclusion: probabilityToConclusion(probability),
+        probability,
       });
   }
 }
@@ -71,6 +75,20 @@ export class WalletEngine extends Engine<WalletArgs, WalletJobResult> {
     return new WalletJob(this.name, new Address(args.needle_address));
   }
 
+}
+
+function probabilityToConclusion(probability: number): string {
+  if (probability > 0.75) {
+    return 'Surely a wallet';
+  }
+  if (probability > 0.25 && probability <= 0.75) {
+    return 'Probably a wallet';
+  }
+  if (probability <= 0.25) {
+    return 'Probably an exchange';
+  }
+
+  return 'Never gonna happen :)';
 }
 
 engineRegistry.register(new WalletEngine());
