@@ -6,6 +6,7 @@ import { DistanceEngine } from './engines/distance';
 import { RelatedAddressEngine } from './engines/related';
 import { RelationshipEngine } from './engines/relationship';
 import { TimedBalanceEngine } from './engines/timedbalance';
+import { VolumeEngine } from './engines/volume';
 import { WalletEngine } from './engines/wallet';
 import { buildGraphFromEdges } from './graph';
 
@@ -112,6 +113,17 @@ function findTimedBalance(source: string) {
   log(`Finding timed balance of cluster ${source}. Job ${jobUUID}`);
 }
 
+function findVolume(source: string) {
+  const engine = new VolumeEngine();
+
+  const jobUUID = engine.execute(
+    { needle_address: source },
+    result => log(`The volume in is: ${result ? result.inbound : 0}, out: ${result ? result.outbound : 0}`),
+  );
+
+  log(`Finding volume of cluster ${source}. Job ${jobUUID}`);
+}
+
 function findWalletProbability(source: string) {
   const engine = new WalletEngine();
 
@@ -215,5 +227,16 @@ yargs
       },
     },
     args => findWalletProbability(args.source),
+  )
+  .command(
+    'volume <source>',
+    'Find the volume of cluster', {
+      source: {
+        default: '',
+        describe: 'Source address',
+        type: 'string',
+      },
+    },
+    args => findVolume(args.source),
   )
   .wrap(yargs.terminalWidth()).argv;
