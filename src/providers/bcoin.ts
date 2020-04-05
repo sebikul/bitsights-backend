@@ -47,7 +47,7 @@ const clientOptions = {
   host: config.bcoin.host,
   network: config.bcoin.testnet ? 'testnet' : 'main',
   port: config.bcoin.port,
-  ssl: true,
+  ssl: config.bcoin.ssl,
   timeout: 600000,
 };
 

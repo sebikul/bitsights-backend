@@ -9,6 +9,7 @@ declare module 'dos-config' {
       port: number;
       host: string;
       testnet: boolean;
+      ssl: boolean;
     };
     redis: {
       enabled: boolean;
