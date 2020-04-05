@@ -61,8 +61,7 @@ class RelatedJob extends Job<RelatedJobResult> {
     // We now have all the transactions in which _address_ was an input
     for (const tx of wasAnInputTransactions) {
       // Filter out current address from the inputs
-      const filteredInputs = (tx.inputs as Address[])
-        .filter(value => value.address !== address.address);
+      const filteredInputs = tx.inputs.filter(value => value.address !== address.address);
 
       // We now have all the inputs which are related to this address
       for (const input of filteredInputs) {
@@ -83,22 +82,22 @@ class RelatedJob extends Job<RelatedJobResult> {
       relatedPromises.push(
         this.findChangeAddressForTx(fromTransaction, address),
       );
-    } else {
-      for (const transaction of participatedInTransactions) {
-        const changeAddress = await transaction.getChangeAddress();
+    }
 
-        if (changeAddress && changeAddress.address === address.address && transaction.inputs) {
+    for (const transaction of participatedInTransactions) {
+      const changeAddress = await transaction.getChangeAddress();
 
-          for (const input of transaction.inputs) {
-            if (this.isPresentInCorpus(input)) {
-              // We have already traversed this node
-              continue;
-            }
+      if (changeAddress?.address === address.address && transaction.inputs) {
 
-            this.createEdge(address, input, transaction, true);
-
-            relatedPromises.push(this.findRelatedTo(input, transaction));
+        for (const input of transaction.inputs) {
+          if (this.isPresentInCorpus(input)) {
+            // We have already traversed this node
+            continue;
           }
+
+          this.createEdge(address, input, transaction, true);
+
+          relatedPromises.push(this.findRelatedTo(input, transaction));
         }
       }
     }
