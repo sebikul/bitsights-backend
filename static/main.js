@@ -153,7 +153,7 @@ $(document).ready(function () {
                         xAxes: [{
                             type: 'time',
                             time: {
-                                // round: 'day',
+                                unit: 'day',
                                 tooltipFormat: 'MM/DD/YYYY',
                                 // parser: 'MM/DD/YYYY HH:mm'
                             },
