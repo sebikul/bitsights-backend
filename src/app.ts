@@ -67,7 +67,7 @@ app.get('/jobs/:id', async (req, res) => {
 app.get('/jobs/:id/results', async (req, res) => {
   const jobUUID = req.params.id;
 
-  const format = req.query.format || 'json';
+  const format = req.query.format as string || 'json';
 
   if (!['json', 'graphviz'].includes(format)) {
     res.status(400).send({ message: 'Invalid format', status: 'error' });
