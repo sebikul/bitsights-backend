@@ -138,13 +138,10 @@ app.get('/addrs/:id', async (req, res) => {
 app.get('/transactions/:id', async (req, res) => {
   const options = {
     json: true,
-    uri: `https://api.blockcypher.com/v1/btc/main/txs/${req.params.id}?limit=50&includeHex=true`,
+    uri: `https://api.blockcypher.com/v1/btc/test3/txs/${req.params.id}?limit=50&includeHex=true`,
   };
 
   const data = await request.get(options);
-  console.log('SE VIENEEEEEE LA DATAAAAAAAAAAAAAAAAAAAAAA');
-  console.log(data);
-
   res.status(200).send(data);
 
 });
