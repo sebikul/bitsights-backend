@@ -2,10 +2,11 @@
   "env": "development",
   "port": 3000,
   "bcoin": {
-    "host": "bitsights.sebikul.com",
+    "host": "localhost",
     "apiKey": "",
-    "port": 443,
-    "testnet": true
+    "port": 18332,
+    "testnet": true,
+    "ssl": false
   },
   "redis": {
     "enabled": false,

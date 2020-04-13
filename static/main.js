@@ -126,7 +126,7 @@ $(document).ready(function () {
             });
 
 
-            var ctx = document.getElementById('chart1').getContext('2d');
+            const ctx = document.getElementById('chart1').getContext('2d');
             ctx.canvas.width = 1000;
             ctx.canvas.height = 300;
 
@@ -152,45 +152,28 @@ $(document).ready(function () {
                     scales: {
                         xAxes: [{
                             type: 'time',
+                            time: {
+                                unit: 'day',
+                                tooltipFormat: 'MM/DD/YYYY',
+                                // parser: 'MM/DD/YYYY HH:mm'
+                            },
                             distribution: 'series',
                             offset: true,
-                            ticks: {
-                                major: {
-                                    enabled: true,
-                                    fontStyle: 'bold'
-                                },
-                                source: 'data',
-                                autoSkip: true,
-                                autoSkipPadding: 75,
-                                maxRotation: 0,
-                                sampleSize: 100
-                            },
-                            // afterBuildTicks: function(scale, ticks) {
-                            //     var majorUnit = scale._majorUnit;
-                            //     var firstTick = ticks[0];
-                            //     var i, ilen, val, tick, currMajor, lastMajor;
-                            //
-                            //     val = moment(ticks[0].value);
-                            //     if ((majorUnit === 'minute' && val.second() === 0)
-                            //         || (majorUnit === 'hour' && val.minute() === 0)
-                            //         || (majorUnit === 'day' && val.hour() === 9)
-                            //         || (majorUnit === 'month' && val.date() <= 3 && val.isoWeekday() === 1)
-                            //         || (majorUnit === 'year' && val.month() === 0)) {
-                            //         firstTick.major = true;
-                            //     } else {
-                            //         firstTick.major = false;
-                            //     }
-                            //     lastMajor = val.get(majorUnit);
-                            //
-                            //     for (i = 1, ilen = ticks.length; i < ilen; i++) {
-                            //         tick = ticks[i];
-                            //         val = moment(tick.value);
-                            //         currMajor = val.get(majorUnit);
-                            //         tick.major = currMajor !== lastMajor;
-                            //         lastMajor = currMajor;
-                            //     }
-                            //     return ticks;
-                            // }
+                            // ticks: {
+                            //     major: {
+                            //         enabled: true,
+                            //         fontStyle: 'bold'
+                            //     },
+                            //     source: 'data',
+                            //     autoSkip: true,
+                            //     autoSkipPadding: 75,
+                            //     maxRotation: 0,
+                            //     sampleSize: 100
+                            // },
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Date'
+                            }
                         }],
                         yAxes: [{
                             gridLines: {
@@ -219,7 +202,7 @@ $(document).ready(function () {
                 }
             };
 
-            var chart = new Chart(ctx, cfg);
+            const chart = new Chart(ctx, cfg);
             chart.update();
             $('#chart-modal').modal('show');
         });
