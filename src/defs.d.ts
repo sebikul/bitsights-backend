@@ -16,7 +16,8 @@ declare module 'dos-config' {
       host: string;
       port: number;
     };
-    provider: 'bcoin' | 'blockcypher';
+    provider: 'bcoin' | 'blockcypher' | 'blockchair';
+    chain: 'mainnet' | 'testnet';
   }
 
   export default config;

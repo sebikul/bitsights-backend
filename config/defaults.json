@@ -13,5 +13,6 @@
     "host": "redis",
     "port": 6379
   },
-  "provider": "bcoin"
+  "provider": "bcoin",
+  "chain": "testnet"
 }
