@@ -9,10 +9,14 @@
     "ssl": false
   },
   "redis": {
-    "enabled": false,
     "host": "redis",
     "port": 6379
   },
+  "fileCache": {
+    "path": "cache"
+  },
+  "cache": "file",
   "provider": "bcoin",
-  "chain": "testnet"
+  "chain": "testnet",
+  "blockChairApiKey": ""
 }

@@ -12,12 +12,16 @@ declare module 'dos-config' {
       ssl: boolean;
     };
     redis: {
-      enabled: boolean;
       host: string;
       port: number;
     };
+    fileCache: {
+      path: string;
+    };
+    cache: 'redis' | 'file' | 'none';
     provider: 'bcoin' | 'blockcypher' | 'blockchair';
     chain: 'mainnet' | 'testnet';
+    blockChairApiKey: string;
   }
 
   export default config;

@@ -1,16 +1,12 @@
+import config from 'dos-config';
 import { chunk, flatten, get } from 'lodash';
-import redis, { RedisClient } from 'redis';
+
 import * as request from 'request-promise-native';
-import { promisify } from 'util';
 import { Address, Transaction } from '../models';
+import { cacheFunctions as cache } from './cache';
 import { Provider } from './types';
 
-import config from 'dos-config';
-
 const log = require('debug')('bitsights:blockchair');
-
-let redisClient: RedisClient;
-let getAsync: any;
 
 function getChain() {
   switch (config.chain) {
@@ -22,16 +18,7 @@ function getChain() {
   throw new Error('Invalid chain');
 }
 
-const BASE_URL = 'https://api.blockchair.com/';
-
-if (config.redis.enabled) {
-  redisClient = redis.createClient(
-    {
-      host: config.redis.host,
-      port: config.redis.port,
-    });
-  getAsync = promisify(redisClient.get).bind(redisClient);
-}
+const BASE_URL = 'https://api.blockchair.com';
 
 function buildUrl(suffix: string) {
   return `${BASE_URL}/${getChain()}/${suffix}`;
@@ -48,29 +35,54 @@ function mapTransactionDataToObject(transactionData: any): Transaction {
   return new Transaction(transactionData.transaction.hash, Date.parse(transactionData.transaction.time), inputs, outputs);
 }
 
-async function getURLAndCacheResponse(url: string): Promise<any> {
-  if (config.redis.enabled) {
-    const data = await getAsync(url);
+const throttledGetURL = request.get;
 
-    if (data === null) {
-      return await request.get(url).then((response) => {
-        redisClient.set(url, response, 'EX', 3600);
+// const throttledGetURL = throttle(request.get, 500);
+
+async function getURLAndCacheResponse(url: string): Promise<any> {
+  let realUrl: string;
+
+  if (config.blockChairApiKey) {
+    if (url.indexOf('?') > 0) {
+      realUrl = `${url}&key=${config.blockChairApiKey}`;
+    } else {
+      realUrl = `${url}?key=${config.blockChairApiKey}`;
+    }
+  } else {
+    realUrl = url;
+  }
+
+  if (config.cache !== 'none') {
+    const data = await cache.get(url);
+
+    if (data === null || data === undefined) {
+      return await throttledGetURL(realUrl).then((response) => {
+        cache.set(url, response, 'EX', 3600);
         return response;
-      }).then(JSON.parse);
+      }).then(JSON.parse).catch((error) => {
+        log(`Request to ${realUrl} failed: ${error}`);
+        throw new Error(error);
+      });
     }
     // log('Request is cached');
     return JSON.parse(data);
   }
 
-  return request.get(url).then(JSON.parse);
+  return throttledGetURL(realUrl).then(JSON.parse).catch((error) => {
+    log(`Request to ${realUrl} failed: ${error}`);
+  });
 }
 
 async function getRawTransactionsForAddress(address: Address): Promise<string[]> {
-  const url = buildUrl(`dashboards/address/${address.address}`);
+  const url = buildUrl(`dashboards/address/${address.address}?limit=10000,0`);
 
   const addressData = await getURLAndCacheResponse(url);
 
   const transactions = get(addressData, `data.${address.address}.transactions`);
+
+  if (transactions === undefined) {
+    debugger;
+  }
 
   return transactions as string[];
 }
@@ -78,16 +90,20 @@ async function getRawTransactionsForAddress(address: Address): Promise<string[]>
 async function getTransactionsData(transactions: string[]): Promise<Transaction[]> {
 
   if (transactions.length <= 10) {
-    const url = buildUrl(`dashboards/transactions/${transactions.join(',')}`);
+    const url = buildUrl(`dashboards/transactions/${transactions.sort().join(',')}`);
 
     const transactionsRawData = await getURLAndCacheResponse(url);
 
     const transactionData: any[] = transactions.map(tx => get(transactionsRawData, `data.${tx}`));
 
-    return transactionData.map(mapTransactionDataToObject);
+    if (transactionData.some(txData => txData === undefined)) {
+      debugger;
+    }
+
+    return transactionData.filter(transactionData => transactionData !== undefined).map(mapTransactionDataToObject);
   }
 
-  const chunks = chunk(transactions, 10);
+  const chunks = chunk(transactions.sort(), 10);
 
   const responses = await Promise.all(chunks.map(getTransactionsData));
 
