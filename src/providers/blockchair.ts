@@ -1,5 +1,5 @@
 import config from 'dos-config';
-import { chunk, flatten, get } from 'lodash';
+import { chunk, get } from 'lodash';
 
 import * as request from 'request-promise-native';
 import { Address, Transaction } from '../models';
@@ -90,6 +90,7 @@ async function getRawTransactionsForAddress(address: Address): Promise<string[]>
 async function getTransactionsData(transactions: string[]): Promise<Transaction[]> {
 
   if (transactions.length <= 10) {
+    log(`Querying blockchair for transactions ${transactions.sort().join(',')}`);
     const url = buildUrl(`dashboards/transactions/${transactions.sort().join(',')}`);
 
     const transactionsRawData = await getURLAndCacheResponse(url);
@@ -103,11 +104,19 @@ async function getTransactionsData(transactions: string[]): Promise<Transaction[
     return transactionData.filter(transactionData => transactionData !== undefined).map(mapTransactionDataToObject);
   }
 
+  log(`Transaction list of ${transactions.length} over the limit, separating in chunks`);
+
   const chunks = chunk(transactions.sort(), 10);
 
-  const responses = await Promise.all(chunks.map(getTransactionsData));
+  const responses = [];
 
-  return flatten(responses);
+  for (const chunk of chunks) {
+    const response = await getTransactionsData(chunk);
+
+    responses.push(...response);
+  }
+
+  return responses;
 }
 
 export const getTransactionsForAddress: Provider = async (
