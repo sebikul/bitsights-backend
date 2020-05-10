@@ -1,25 +1,10 @@
 const { NodeClient } = require('bclient');
 import config from 'dos-config';
-import redis, { RedisClient } from 'redis';
-import { promisify } from 'util';
 import { Address, Transaction } from '../models';
+import { cacheFunctions as cache } from './cache';
 import { Provider } from './types';
 
 const log = require('debug')('bitsights:bcoin');
-
-let redisClient: RedisClient;
-let getAsync: any;
-
-if (config.redis.enabled) {
-  redisClient = redis.createClient(
-    {
-      host: config.redis.host,
-      port: config.redis.port,
-    });
-  getAsync = promisify(redisClient.get).bind(redisClient);
-}
-
-// const setAsync = promisify(redisClient.set).bind(redisClient);
 
 interface CoinResponse {
   address: string;
@@ -69,9 +54,9 @@ export const getTransactionsForAddress: Provider = async (
   let transactions: TransactionResponse[];
   let shouldWriteBack = false;
 
-  if (config.redis.enabled) {
-    const data = await getAsync(`bcoin_${address.address}`);
-    if (data === null) {
+  if (config.cache === 'redis') {
+    const data = await cache.get(`bcoin_${address.address}`);
+    if (data === null || data === undefined) {
       shouldWriteBack = true;
       transactions = await performTransactionQuery(address);
     } else {
@@ -81,8 +66,8 @@ export const getTransactionsForAddress: Provider = async (
     transactions = await performTransactionQuery(address);
   }
 
-  if (config.redis.enabled && shouldWriteBack) {
-    redisClient.set(`bcoin_${address.address}`, JSON.stringify(transactions ?? []), 'EX', 3600);
+  if (config.cache === 'redis' && shouldWriteBack) {
+    cache.set(`bcoin_${address.address}`, JSON.stringify(transactions ?? []), 'EX', 3600);
   }
 
   return (transactions ?? [])
