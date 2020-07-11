@@ -1,4 +1,4 @@
-const { NodeClient } = require('bclient');
+const { NodeClient } = require('bcoin');
 import config from 'dos-config';
 import { Address, Transaction } from '../models';
 import { cacheFunctions as cache } from './cache';
@@ -36,7 +36,7 @@ const clientOptions = {
   timeout: 600000,
 };
 
-const client = new NodeClient(clientOptions);
+export const client = new NodeClient(clientOptions);
 
 async function performTransactionQuery(address: Address): Promise<TransactionResponse[]> {
   return await client.getTXByAddress(address.address)
@@ -48,6 +48,10 @@ async function performTransactionQuery(address: Address): Promise<TransactionRes
 export const getTransactionsForAddress: Provider = async (
   address: Address,
 ): Promise<Transaction[]> => {
+
+  if (address.address === null) {
+    return [];
+  }
 
   log(`Querying blockchain for address ${address.address}`);
 
@@ -67,7 +71,7 @@ export const getTransactionsForAddress: Provider = async (
   }
 
   if (config.cache === 'redis' && shouldWriteBack) {
-    cache.set(`bcoin_${address.address}`, JSON.stringify(transactions ?? []), 'EX', 3600);
+    cache.set(`bcoin_${address.address}`, JSON.stringify(transactions ?? []), 'EX', 360000);
   }
 
   return (transactions ?? [])
