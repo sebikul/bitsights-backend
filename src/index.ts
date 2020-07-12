@@ -243,6 +243,6 @@ yargs
   .command(
     'clusterize',
     'Clusterize the blockchain', {},
-    clusterize,
+    () => clusterize(),
   )
   .wrap(yargs.terminalWidth()).argv;

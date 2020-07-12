@@ -1,5 +1,6 @@
 import { asyncify, parallelLimit } from 'async';
 import crypto from 'crypto';
+import { countBy, Dictionary } from 'lodash';
 import { RelatedAddressEngine } from './engines/related';
 import { client } from './providers/bcoin';
 
@@ -19,13 +20,13 @@ interface Block {
   txs: Transaction[];
 }
 
-export default async function () {
+export default async function (clusterSizeThreshold: number = 3) {
   const tip = await getTip();
   log(`Found tip: ${tip}`);
 
   const clusters = new Map<string, string>(); // Map of address to cluster hash
 
-  for (let i = 1779462; i < tip; i += 1) {
+  for (let i = tip - 20; i < tip; i += 1) {
     // log(`Fetching block ${i}`);
     const block = await getBlock(i);
     // log(`Parsing ${block.hash}`);
@@ -43,7 +44,25 @@ export default async function () {
     }
   }
 
+  const clusterSizes: Dictionary<number> = countBy(Array.from(groupedClusters.entries()).map(([_, value]) => value.length));
+  let clustersOverThreshold = 0;
+  let clusterizableAddresses = 0;
+
+  for (const size in clusterSizes) {
+    log(`Clusters of size ${size}: ${clusterSizes[size]}`);
+    const realSize = Number.parseInt(size, 10);
+    if (realSize > clusterSizeThreshold) {
+      clustersOverThreshold += clusterSizes[size];
+      clusterizableAddresses += clusterSizes[size] * realSize;
+    }
+  }
+
+  log(`Clusters over threshold size of ${clusterSizeThreshold}: ${clustersOverThreshold}`);
+  log(`Clusterizable addresses: ${clusterizableAddresses}/${Array.from(clusters.keys()).length}`);
+  log(`Clusterizable addresses: ${clusterizableAddresses / Array.from(clusters.keys()).length * 100}%`);
+
   log('Clusters: %O', groupedClusters);
+
 }
 
 async function getBlock(height: number): Promise<Block> {
