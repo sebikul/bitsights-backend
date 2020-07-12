@@ -42,7 +42,7 @@ function getCacheFunctions(): CacheFunctions {
         });
       return {
         get: promisify(redisClient.get).bind(redisClient),
-        set: redisClient.set,
+        set: redisClient.set.bind(redisClient),
       };
     case 'file':
       return {

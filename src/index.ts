@@ -1,6 +1,7 @@
 import config from 'dos-config';
 import fs from 'fs';
 import yargs from 'yargs';
+import clusterize from './clusterize';
 import { BalanceEngine } from './engines/balance';
 import { DistanceEngine } from './engines/distance';
 import { RelatedAddressEngine } from './engines/related';
@@ -238,5 +239,10 @@ yargs
       },
     },
     args => findVolume(args.source),
+  )
+  .command(
+    'clusterize',
+    'Clusterize the blockchain', {},
+    () => clusterize(),
   )
   .wrap(yargs.terminalWidth()).argv;

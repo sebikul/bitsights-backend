@@ -32,15 +32,9 @@ class BalanceJob extends Job<BalanceJobResult> {
       { needle_address: this.needleAddress.address },
     );
 
-    let balance = 0;
+    const rawAddressCluster: string[] = cluster.addresses.map(a => a.address);
 
-    // const chunks = _.chunk(cluster.addresses, 10);
-    //
-    // for (const address of chunks) {
-    //   const thisBalance = await getBalance(address);
-    //
-    //   balance += thisBalance;
-    // }
+    let currentBalance = 0;
 
     const transactions: Transaction[] = [];
 
@@ -52,22 +46,36 @@ class BalanceJob extends Job<BalanceJobResult> {
     transactions.sort((a, b) => a.time - b.time);
 
     for (const transaction of transactions) {
-      let balanceAfterThisTx = balance;
+      let balanceAfterThisTx = currentBalance;
 
-      for (const input of transaction.inputs) {
-        balanceAfterThisTx -= input.value || 0;
+      const clusterInputs = transaction.inputs.filter(i => rawAddressCluster.includes(i.address));
+      const outsiderInputs = transaction.inputs.filter(i => !rawAddressCluster.includes(i.address));
+
+      const clusterOutputs = transaction.outputs.filter(o => rawAddressCluster.includes(o.address));
+      const outsiderOutputs = transaction.outputs.filter(o => !rawAddressCluster.includes(o.address));
+
+      for (const input of clusterInputs) {
+        balanceAfterThisTx += input.value ?? 0;
       }
 
-      for (const output of transaction.outputs) {
-        balanceAfterThisTx += output.value || 0;
+      for (const input of outsiderInputs) {
+        balanceAfterThisTx += input.value ?? 0;
       }
 
-      balance = balanceAfterThisTx;
+      for (const output of clusterOutputs) {
+        balanceAfterThisTx += output.value ?? 0;
+      }
+
+      for (const output of outsiderOutputs) {
+        balanceAfterThisTx -= output.value ?? 0;
+      }
+
+      currentBalance = balanceAfterThisTx;
     }
 
     this.setResult(
       {
-        balance,
+        balance: currentBalance,
       });
   }
 }
