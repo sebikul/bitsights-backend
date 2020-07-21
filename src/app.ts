@@ -70,6 +70,8 @@ app.get('/jobs/:id/results', async (req, res) => {
   const jobUUID = req.params.id;
 
   const format = req.query.format as string || 'json';
+  console.log('ESTO TIENE LA VARIABLE REQ QUERY FORMAT');
+  console.log(format);
 
   if (!['json', 'graphviz'].includes(format)) {
     res.status(400).send({ message: 'Invalid format', status: 'error' });
@@ -89,6 +91,7 @@ app.get('/jobs/:id/results', async (req, res) => {
 
   switch (format) {
     case 'json':
+      console.log('voy a devolver desde aca');
       res.status(200).send({
         results: job.getResult(),
         status: job.getStatus(),
@@ -98,12 +101,12 @@ app.get('/jobs/:id/results', async (req, res) => {
       break;
 
     case 'graphviz':
-
+      console.log('ingrese en graphviz perreque');
       switch (job.getType()) {
         case 'DISTANCE':
         case 'RELATED':
           const graph = buildGraphFromEdges(job.getResult().edges);
-          res.status(200).send(graph);
+          res.status(200).send({ results: graph });
           break;
         case 'RELATIONSHIP':
 
@@ -114,7 +117,8 @@ app.get('/jobs/:id/results', async (req, res) => {
             jobResult.rightCluster.edges,
             jobResult.crossEdges,
           );
-          res.status(200).send(bigraph);
+
+          res.status(200).send({ results: bigraph });
           break;
       }
 
@@ -128,9 +132,6 @@ app.get('/addrs/:id', async (req, res) => {
   };
 
   const data = await request.get(options);
-  console.log('SE VIENEEEEEE LA DATAAAAAAAAAAAAAAAAAAAAAA');
-  console.log(data);
-
   res.status(200).send(data);
 
 });
@@ -153,9 +154,6 @@ app.get('/blocks/:id', async (req, res) => {
   };
 
   const data = await request.get(options);
-  console.log('SE VIENEEEEEE LA DATAAAAAAAAAAAAAAAAAAAAAA');
-  console.log(data);
-
   res.status(200).send(data);
 
 });
