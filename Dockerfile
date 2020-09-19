@@ -12,6 +12,7 @@ RUN npm install --only=production --loglevel=warn --progress=false --porcelain
 COPY ["config", "/usr/src/config/"]
 COPY ["*.*", "/usr/src/"]
 COPY ["src", "/usr/src/src/"]
+COPY ["static", "/usr/src/static/"]
 
 RUN npm install --loglevel=warn --progress=false --porcelain
 
@@ -29,6 +30,7 @@ RUN npm install --only=production --loglevel=warn --progress=false --porcelain
 
 COPY --from=builder ["/usr/src/config", "/usr/src/config/"]
 COPY --from=builder ["/usr/src/dist", "/usr/src/dist"]
+COPY --from=builder ["/usr/src/static", "/usr/src/static"]
 
 EXPOSE 3000
 
