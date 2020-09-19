@@ -1,4 +1,6 @@
-FROM node:10.15.3-alpine as builder
+FROM node:12.18.2-alpine as builder
+
+RUN apk add git python make g++
 
 WORKDIR /usr/src
 
@@ -15,7 +17,9 @@ RUN npm install --loglevel=warn --progress=false --porcelain
 
 RUN npm run build
 
-FROM node:10.15.3-alpine
+FROM node:12.18.2-alpine
+
+RUN apk add git python make g++
 
 WORKDIR /usr/src
 

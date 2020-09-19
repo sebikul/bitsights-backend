@@ -2,7 +2,7 @@
 
 ## Configuration
 
-You need to set the API key. You have two ways:
+If you are using BCoin as your backend, you need to set the API key. You have two ways:
 
 Either create the file `config/development.json` with the following content:
 
