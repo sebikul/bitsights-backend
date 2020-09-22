@@ -11,7 +11,6 @@ class JobRegistry {
     if (!this.jobs.hasOwnProperty(uuid)) {
       return null;
     }
-
     return this.jobs[uuid];
   }
 
