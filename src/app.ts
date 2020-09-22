@@ -68,10 +68,7 @@ app.get('/jobs/:id', async (req, res) => {
 
 app.get('/jobs/:id/results', async (req, res) => {
   const jobUUID = req.params.id;
-
   const format = req.query.format as string || 'json';
-  console.log('ESTO TIENE LA VARIABLE REQ QUERY FORMAT');
-  console.log(format);
 
   if (!['json', 'graphviz'].includes(format)) {
     res.status(400).send({ message: 'Invalid format', status: 'error' });
@@ -91,7 +88,6 @@ app.get('/jobs/:id/results', async (req, res) => {
 
   switch (format) {
     case 'json':
-      console.log('voy a devolver desde aca');
       res.status(200).send({
         results: job.getResult(),
         status: job.getStatus(),
@@ -101,7 +97,6 @@ app.get('/jobs/:id/results', async (req, res) => {
       break;
 
     case 'graphviz':
-      console.log('ingrese en graphviz perreque');
       switch (job.getType()) {
         case 'DISTANCE':
         case 'RELATED':
@@ -125,7 +120,8 @@ app.get('/jobs/:id/results', async (req, res) => {
   }
 });
 
-app.get('/addrs/:id', async (req, res) => {
+/* Testnet endpoints */
+app.get('/testnet/addrs/:id', async (req, res) => {
   const options = {
     json: true,
     uri: `https://api.blockcypher.com/v1/btc/test3/addrs/${req.params.id}/full?limit=50`,
@@ -136,7 +132,7 @@ app.get('/addrs/:id', async (req, res) => {
 
 });
 
-app.get('/transactions/:id', async (req, res) => {
+app.get('/testnet/transactions/:id', async (req, res) => {
   const options = {
     json: true,
     uri: `https://api.blockcypher.com/v1/btc/test3/txs/${req.params.id}?limit=50&includeHex=true`,
@@ -144,13 +140,45 @@ app.get('/transactions/:id', async (req, res) => {
 
   const data = await request.get(options);
   res.status(200).send(data);
-
 });
 
-app.get('/blocks/:id', async (req, res) => {
+app.get('/testnet/blocks/:id', async (req, res) => {
   const options = {
     json: true,
     uri: `https://api.blockcypher.com/v1/btc/test3/blocks/${req.params.id}`,
+  };
+
+  const data = await request.get(options);
+  res.status(200).send(data);
+
+});
+
+/* Mainnet endpoints */
+app.get('/mainnet/addrs/:id', async (req, res) => {
+  const options = {
+    json: true,
+    uri: `https://api.blockcypher.com/v1/btc/main/addrs/${req.params.id}/full?limit=50`,
+  };
+
+  const data = await request.get(options);
+  res.status(200).send(data);
+
+});
+
+app.get('/mainnet/transactions/:id', async (req, res) => {
+  const options = {
+    json: true,
+    uri: `https://api.blockcypher.com/v1/btc/main/txs/${req.params.id}?limit=50&includeHex=true`,
+  };
+
+  const data = await request.get(options);
+  res.status(200).send(data);
+});
+
+app.get('/mainnet/blocks/:id', async (req, res) => {
+  const options = {
+    json: true,
+    uri: `https://api.blockcypher.com/v1/btc/main/blocks/${req.params.id}`,
   };
 
   const data = await request.get(options);
