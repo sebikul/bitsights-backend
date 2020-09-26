@@ -1,10 +1,16 @@
 const { NodeClient } = require('bcoin');
+import Bottleneck from 'bottleneck';
 import config from 'dos-config';
 import { Address, Transaction } from '../models';
 import { cacheFunctions as cache } from './cache';
 import { Provider } from './types';
 
 const log = require('debug')('bitsights:bcoin');
+
+const limiter = new Bottleneck({
+  maxConcurrent: 8,
+  minTime: 50,
+});
 
 interface CoinResponse {
   address: string;
@@ -38,12 +44,13 @@ const clientOptions = {
 
 export const client = new NodeClient(clientOptions);
 
-async function performTransactionQuery(address: Address): Promise<TransactionResponse[]> {
-  return await client.getTXByAddress(address.address)
-    .catch((reason: any) => {
-      console.log(reason);
-    });
-}
+// tslint:disable-next-line:variable-name
+const _performTransactionQuery = async (address: Address): Promise<TransactionResponse[]> => await client.getTXByAddress(address.address)
+  .catch((reason: any) => {
+    console.log(reason);
+  });
+
+const performTransactionQuery = limiter.wrap(_performTransactionQuery);
 
 export const getTransactionsForAddress: Provider = async (
   address: Address,
