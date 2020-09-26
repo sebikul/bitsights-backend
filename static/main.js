@@ -84,7 +84,7 @@ $(document).ready(function () {
         $.get(`/jobs/${uuid}/results?format=graphviz`, function (data, _) {
             console.log(JSON.stringify(data));
 
-            renderGraph(data);
+            renderGraph(data.results);
             $('#graph-modal').modal('show');
         });
     }
