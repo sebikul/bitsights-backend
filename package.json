@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@types/cors": "2.8.6",
-    "async": "3.2.0",
+    "async": "3.2.2",
     "bcoin": "git+https://github.com/bcoin-org/bcoin.git#semver:~2.1.2",
     "bottleneck": "2.19.5",
     "cookie-parser": "1.4.5",
